@@ -3,19 +3,28 @@
   "version": "1.0.0",
   "private": true,
   "description": "AI-powered Poultry Expert Chat Application using Mistral Agent",
-  "dependencies": {
+ "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-redux": "^9.1.0",
-    "redux": "^5.0.1",
-    "react-scripts": "5.0.1"
+    "@reduxjs/toolkit": "^2.2.3",
+    "react-markdown": "^9.0.1",
+    "remark-math": "^6.0.0",
+    "rehype-katex": "^7.0.0",
+    "katex": "^0.16.10",
+    "framer-motion": "^11.1.9",
+    "react-syntax-highlighter": "^15.5.0",
+    "react-hot-toast": "^2.4.1",
+    "uuid": "^9.0.1",
+    "react-icons": "^5.1.0",
+    "react-tooltip": "^5.26.3",
+    "react-scripts": "5.0.1",
+    "cross-env": "^7.0.3"
   },
   "scripts": {
     "start": "cross-env PORT=3000 react-scripts start",
     "build": "cross-env DISABLE_ESLINT_PLUGIN=true react-scripts build",
-    "dev": "netlify dev",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "dev": "netlify dev"
   },
   "eslintConfig": {
     "extends": ["react-app"]

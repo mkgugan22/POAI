@@ -9,6 +9,7 @@ export default function ChatHeader() {
 
   return (
     <header
+      className="chat-header"
       style={{
         padding: "13px 20px",
         borderBottom: "1px solid var(--border)",
@@ -44,7 +45,7 @@ export default function ChatHeader() {
       </button>
 
       {/* Brand */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1 }}>
+      <div className="brand" style={{ display: "flex", alignItems: "center", gap: 12, flex: 1 }}>
         <div
           style={{
             fontSize: 30,
@@ -70,6 +71,7 @@ export default function ChatHeader() {
             Poultry Expert AI
           </div>
           <div
+            className="subtitle"
             style={{
               fontSize: 11,
               color: "var(--muted)",

@@ -152,3 +152,123 @@ textarea:focus { outline: none; }
 
 /* ─── Button base ────────────────────────────────────────────────────────── */
 button { font-family: 'Nunito', sans-serif; }
+
+/* ─── Responsive Design ───────────────────────────────────────────────────── */
+
+/* Tablet and Mobile */
+@media (max-width: 1024px) {
+  /* Adjust sidebar for smaller screens */
+  .sidebar {
+    width: 0 !important;
+  }
+  .sidebar.open {
+    width: 280px !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    z-index: 1000;
+    background: var(--surface);
+    box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+  }
+
+  /* Chat area adjustments */
+  .chat-area {
+    padding: 10px;
+  }
+
+  /* Message bubbles smaller */
+  .message-bubble {
+    max-width: 90% !important;
+    padding: 10px 14px !important;
+    font-size: 14px !important;
+  }
+
+  /* Header smaller */
+  .chat-header {
+    padding: 10px 15px !important;
+  }
+
+  .chat-header .brand {
+    font-size: 16px !important;
+  }
+
+  .chat-header .subtitle {
+    font-size: 10px !important;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  /* Sidebar overlay */
+  .sidebar.open {
+    width: 250px !important;
+  }
+
+  /* Chat area more compact */
+  .chat-area {
+    padding: 5px;
+  }
+
+  /* Smaller bubbles */
+  .message-bubble {
+    max-width: 95% !important;
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+  }
+
+  /* Header very small */
+  .chat-header {
+    padding: 8px 12px !important;
+  }
+
+  .chat-header .brand {
+    font-size: 14px !important;
+  }
+
+  .chat-header .subtitle {
+    font-size: 9px !important;
+  }
+
+  /* Welcome screen grid */
+  .welcome-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .feature-card {
+    padding: 12px 10px !important;
+  }
+
+  /* Action buttons smaller */
+  .action-btn {
+    padding: 3px 8px !important;
+    font-size: 10px !important;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .message-bubble {
+    max-width: 98% !important;
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+  }
+
+  .chat-header .brand {
+    font-size: 12px !important;
+  }
+
+  .chat-header .subtitle {
+    font-size: 8px !important;
+  }
+
+  .welcome-grid {
+    gap: 6px !important;
+  }
+
+  .feature-card {
+    padding: 10px 8px !important;
+    font-size: 11px !important;
+  }
+}

@@ -20,6 +20,7 @@ export default function ChatArea({ showToast, onShareMsg }) {
 
   return (
     <main
+      className="chat-area"
       style={{
         flex: 1,
         display: "flex",

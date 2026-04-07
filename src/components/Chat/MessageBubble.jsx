@@ -23,6 +23,7 @@ const ACTION_BTN_STYLE = {
 function ActionButton({ icon, label, onClick, active }) {
   return (
     <button
+      className="action-btn"
       onClick={onClick}
       title={label}
       style={{
@@ -119,6 +120,7 @@ export default function MessageBubble({ msg, onShare, showToast }) {
 
         {/* Bubble */}
         <div
+          className="message-bubble"
           style={{
             background: isUser ? "var(--user-bubble)" : "var(--assistant-bubble)",
             border: isUser

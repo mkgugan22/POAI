@@ -11,6 +11,7 @@ export default function Sidebar({ onNewChat, onSelectConv, theme, onSetTheme }) 
 
   return (
     <aside
+      className={`sidebar ${sidebarOpen ? 'open' : ''}`}
       style={{
         width: sidebarOpen ? 280 : 0,
         flexShrink: 0,

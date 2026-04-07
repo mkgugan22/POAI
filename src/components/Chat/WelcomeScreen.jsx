@@ -57,6 +57,7 @@ export default function WelcomeScreen({ onSelect }) {
 
       {/* Feature grid */}
       <div
+        className="welcome-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(3, 1fr)",
@@ -94,6 +95,7 @@ export default function WelcomeScreen({ onSelect }) {
 function FeatureCard({ card }) {
   return (
     <div
+      className="feature-card"
       style={{
         background: "var(--surface-soft)",
         border: "1px solid var(--border)",

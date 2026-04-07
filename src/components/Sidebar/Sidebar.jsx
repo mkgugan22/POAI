@@ -1,6 +1,6 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { setSidebarOpen, deleteConversation } from "../../store/actions/chatActions";
+import {  deleteConversation } from "../../store/actions/chatActions";
 import { PlusIcon, TrashIcon, ChatIcon } from "../UI/Icons";
 import { truncate } from "../../utils/helpers";
 

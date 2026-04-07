@@ -9,7 +9,6 @@ import { addConversation, setActiveConversation } from "./store/actions/chatActi
 
 export default function App() {
   const dispatch = useDispatch();
-  const { sidebarOpen } = useSelector((s) => s.chat);
   const [shareMsg, setShareMsg] = useState(null);
   const [toast, setToast] = useState(null);
   const [theme, setTheme] = useState("dark");

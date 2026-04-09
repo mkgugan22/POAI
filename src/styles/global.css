@@ -244,7 +244,7 @@ button { font-family: 'Nunito', sans-serif; }
 @media (max-width: 768px) {
   html, body, #root {
     height: 100%;
-    overflow: hidden;
+    overflow: auto;
   }
 
   .sidebar.open {

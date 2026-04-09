@@ -20,7 +20,7 @@ export default function ChatHeader({ onMobileMenuToggle }) {
   }, []);
 
   return (
-    <header style={{
+    <header className="chat-header" style={{
       padding: "10px 16px",
       borderBottom: "1px solid var(--border)",
       background: "var(--surface)",

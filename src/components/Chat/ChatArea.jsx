@@ -21,7 +21,7 @@ export default function ChatArea({ showToast, onShareMsg, onMobileMenuToggle }) 
   };
 
   return (
-    <main style={{
+    <main className="chat-area" style={{
       flex:1, display:"flex", flexDirection:"column",
       overflow:"hidden", position:"relative", zIndex:2,
     }}>

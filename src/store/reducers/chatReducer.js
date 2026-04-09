@@ -11,8 +11,9 @@ import {
   RESET_FOR_USER,
 } from "../actions/chatActions";
 
+// ── Per-user localStorage helpers ────────────────────────────────────────
 function storageKey(userId) {
-  return `fsai_conv_${userId || "guest"}`;
+  return `poai_conv_${userId || "guest"}`;
 }
 
 function saveState(userId, conversationList, conversations, apiConversationIds) {
@@ -31,6 +32,7 @@ function loadState(userId) {
   } catch { return null; }
 }
 
+// ── Fresh empty state for a user ─────────────────────────────────────────
 function freshState(userId) {
   const id   = `conv_${Date.now()}`;
   const conv = { id, title: "New Chat", createdAt: Date.now() };
@@ -43,13 +45,25 @@ function freshState(userId) {
   };
 }
 
+// ── Load saved or fresh state for a user ─────────────────────────────────
 function stateForUser(userId) {
   const saved = loadState(userId);
   if (saved && Array.isArray(saved.conversationList) && saved.conversationList.length > 0) {
+    // ✅ FIX: Validate that conversations map exists and activeConversationId is valid
+    const convList = saved.conversationList;
+    const convMap  = saved.conversations || {};
+    const activeId = convList[0]?.id || null;
+
+    // Ensure every listed conversation has a messages array (guards against corrupted storage)
+    const safeMap = {};
+    convList.forEach(c => {
+      safeMap[c.id] = Array.isArray(convMap[c.id]) ? convMap[c.id] : [];
+    });
+
     return {
-      conversations:        saved.conversations      || {},
-      conversationList:     saved.conversationList,
-      activeConversationId: saved.conversationList[0].id,
+      conversations:        safeMap,
+      conversationList:     convList,
+      activeConversationId: activeId,
       apiConversationIds:   saved.apiConversationIds || {},
       currentUserId:        userId,
     };
@@ -57,6 +71,7 @@ function stateForUser(userId) {
   return freshState(userId);
 }
 
+// ── Initial state (before any login) ─────────────────────────────────────
 const initialState = {
   ...freshState("guest"),
   isLoading:   false,
@@ -68,9 +83,10 @@ export default function chatReducer(state = initialState, action) {
 
   switch (action.type) {
 
+    // ── Called every time the logged-in user changes ──────────────────────
     case RESET_FOR_USER: {
-      const userId = action.payload;
-      const loaded = stateForUser(userId);
+      const userId  = action.payload;
+      const loaded  = stateForUser(userId);
       return {
         ...state,
         ...loaded,
@@ -81,6 +97,8 @@ export default function chatReducer(state = initialState, action) {
 
     case ADD_MESSAGE: {
       const { conversationId, message } = action.payload;
+      // ✅ FIX: Guard against missing conversationId
+      if (!conversationId) return state;
       const existing = state.conversations[conversationId] || [];
       next = {
         ...state,
@@ -95,6 +113,8 @@ export default function chatReducer(state = initialState, action) {
 
     case REPLACE_MESSAGES: {
       const { conversationId, messages } = action.payload;
+      // ✅ FIX: Guard against missing conversationId
+      if (!conversationId) return state;
       next = {
         ...state,
         conversations: { ...state.conversations, [conversationId]: messages },
@@ -144,23 +164,39 @@ export default function chatReducer(state = initialState, action) {
       return next;
 
     case DELETE_CONVERSATION: {
-      const id        = action.payload;
-      const newList   = state.conversationList.filter(c => c.id !== id);
-      const newConvs  = { ...state.conversations };
-      const newApiIds = { ...state.apiConversationIds };
+      const id         = action.payload;
+      const newList    = state.conversationList.filter(c => c.id !== id);
+      const newConvs   = { ...state.conversations };
+      const newApiIds  = { ...state.apiConversationIds };
       delete newConvs[id];
       delete newApiIds[id];
-      const newActive =
-        state.activeConversationId === id
-          ? newList[0]?.id || null
-          : state.activeConversationId;
-      next = {
-        ...state,
-        conversationList:     newList,
-        conversations:        newConvs,
-        apiConversationIds:   newApiIds,
-        activeConversationId: newActive,
-      };
+
+      // ✅ FIX: If no conversations remain, auto-create a fresh one
+      // This prevents activeConversationId from becoming null, which crashes ChatArea
+      if (newList.length === 0) {
+        const newId   = `conv_${Date.now()}`;
+        const newConv = { id: newId, title: "New Chat", createdAt: Date.now() };
+        next = {
+          ...state,
+          conversationList:     [newConv],
+          conversations:        { [newId]: [] },
+          apiConversationIds:   {},
+          activeConversationId: newId,
+        };
+      } else {
+        const newActive =
+          state.activeConversationId === id
+            ? newList[0].id
+            : state.activeConversationId;
+        next = {
+          ...state,
+          conversationList:     newList,
+          conversations:        newConvs,
+          apiConversationIds:   newApiIds,
+          activeConversationId: newActive,
+        };
+      }
+
       saveState(next.currentUserId, next.conversationList, next.conversations, next.apiConversationIds);
       return next;
     }

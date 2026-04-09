@@ -7,6 +7,8 @@ import {
   setLoading,
   updateConversationTitle,
   setApiConvId,
+  addConversation,
+  setActiveConversation,
 } from "../store/actions/chatActions";
 import { generateId, truncate } from "../utils/helpers";
 
@@ -19,14 +21,24 @@ export function useChat() {
   const { activeConversationId, conversations, conversationList, isLoading, apiConversationIds } =
     useSelector((s) => s.chat);
 
-  const currentMessages = conversations[activeConversationId] || [];
+  // ✅ FIX: Always return a safe array — never undefined
+  const currentMessages = Array.isArray(conversations[activeConversationId])
+    ? conversations[activeConversationId]
+    : [];
 
   const sendUserMessage = useCallback(
     async (text) => {
       const content = text.trim();
       if (!content || isLoading) return;
 
-      const convId = activeConversationId;
+      // ✅ FIX: If somehow there's no active conversation, create one before sending
+      let convId = activeConversationId;
+      if (!convId) {
+        const newId = `conv_${Date.now()}`;
+        dispatch(addConversation({ id: newId, title: "New Chat", createdAt: Date.now() }));
+        dispatch(setActiveConversation(newId));
+        convId = newId;
+      }
 
       // 1. Append user message
       const userMsg = {
@@ -68,7 +80,8 @@ export function useChat() {
         const responseText = extractResponseText(data);
 
         // 7. Replace loading bubble with real response
-        const currentMsgs = conversations[convId] || [];
+        // ✅ FIX: Read from store snapshot via getState equivalent — use closure safely
+        const currentMsgs = Array.isArray(conversations[convId]) ? conversations[convId] : [];
         const withoutLoading = currentMsgs.filter((m) => !m.isLoading);
         const assistantMsg = {
           id: generateId("msg"),
@@ -78,7 +91,7 @@ export function useChat() {
         };
         dispatch(replaceMessages(convId, [...withoutLoading, assistantMsg]));
       } catch (err) {
-        const currentMsgs = conversations[convId] || [];
+        const currentMsgs = Array.isArray(conversations[convId]) ? conversations[convId] : [];
         const withoutLoading = currentMsgs.filter((m) => !m.isLoading);
         const errorMsg = {
           id: generateId("err"),

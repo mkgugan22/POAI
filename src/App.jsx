@@ -6,6 +6,7 @@ import ShareModal        from "./components/Modals/ShareModal";
 import Toast             from "./components/UI/Toast";
 import AmbientBackground from "./components/UI/AmbientBackground";
 import AuthPage          from "./components/AuthPage";
+import SharedView        from "./components/SharedView";
 import {
   addConversation,
   setActiveConversation,
@@ -23,6 +24,8 @@ export default function App() {
   const [shareMsg, setShareMsg]     = useState(null);
   const [toast, setToast]           = useState(null);
   const [isMobileView, setIsMobileView] = useState(false);
+  const [sharedMessage, setSharedMessage] = useState(null);
+  const [isSharedRoute, setIsSharedRoute] = useState(false);
 
   const prevUserIdRef = useRef(null);
   useEffect(() => {
@@ -39,6 +42,16 @@ export default function App() {
     handleResize();
     mq.addEventListener("change", handleResize);
     return () => mq.removeEventListener("change", handleResize);
+  }, []);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const params = url.searchParams;
+    const rawMessage = params.get("msg");
+    const sharedFlag = params.get("shared") === "true";
+
+    setSharedMessage(rawMessage ? decodeURIComponent(rawMessage) : null);
+    setIsSharedRoute(url.pathname.startsWith("/share") || sharedFlag);
   }, []);
 
   // Apply theme on mount
@@ -59,6 +72,10 @@ export default function App() {
     dispatch(setActiveConversation(id));
     dispatch(setSidebarOpen(false));
   };
+
+  if (isSharedRoute) {
+    return <SharedView message={sharedMessage} />;
+  }
 
   if (!user) return <AuthPage />;
 

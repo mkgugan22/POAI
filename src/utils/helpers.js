@@ -47,6 +47,7 @@ export function copyToClipboard(text) {
  * Build a shareable URL for a chat message snippet.
  */
 export function buildShareUrl(messageContent) {
-  const snippet = encodeURIComponent(messageContent.slice(0, 120));
-  return `https://poultry-expert.app/share?msg=${snippet}&utm_source=chat`;
+  const encodedMessage = encodeURIComponent(messageContent);
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://poultry-expert.app";
+  return `${origin}/share?msg=${encodedMessage}&utm_source=chat`;
 }

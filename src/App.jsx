@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Sidebar           from "./components/Sidebar/Sidebar";
 import ChatArea          from "./components/Chat/ChatArea";
 import ShareModal        from "./components/Modals/ShareModal";
@@ -11,36 +11,34 @@ import {
   addConversation,
   setActiveConversation,
   resetForUser,
+  setSidebarOpen,
 } from "./store/actions/chatActions";
 import { useAuth }  from "./context/AuthContext";
 import { useTheme } from "./context/ThemeContext";
 
-/**
- * Returns true when the current URL is a share link.
- * Supports:
- *   /share?msg=BASE64     ← new self-contained format
- *   /?shared=true&sid=XX  ← old dpaste format (backward compat)
- */
-function isSharedLink() {
-  const path   = window.location.pathname;
-  const params = new URLSearchParams(window.location.search);
-  return (
-    path === "/share" ||
-    params.has("msg") ||
-    params.get("shared") === "true"
-  );
-}
-
 export default function App() {
   const dispatch = useDispatch();
-  const { user }                    = useAuth();
+  const { user, logout }            = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
+  const sidebarOpen                 = useSelector((s) => s.chat.sidebarOpen);
   const [shareMsg, setShareMsg]     = useState(null);
   const [toast, setToast]           = useState(null);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
+  const [sharedMessage, setSharedMessage] = useState(null);
+  const [sharedSid, setSharedSid] = useState(null);
+  const [isSharedRoute, setIsSharedRoute] = useState(false);
 
-  // ── Reset Redux chat store whenever the logged-in user changes ────────
   const prevUserIdRef = useRef(null);
+
+  const safeDecode = (value) => {
+    if (!value) return null;
+    try {
+      return decodeURIComponent(value.replace(/\+/g, " "));
+    } catch {
+      return value;
+    }
+  };
+
   useEffect(() => {
     const uid = user?.id ?? "guest";
     if (uid !== prevUserIdRef.current) {
@@ -49,23 +47,59 @@ export default function App() {
     }
   }, [user, dispatch]);
 
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const params = url.searchParams;
+    const rawMessage = params.get("msg");
+    const sharedFlag = params.get("shared") === "true";
+    const sid = params.get("sid");
+
+    setSharedMessage(rawMessage ? safeDecode(rawMessage) : null);
+    setSharedSid(sid);
+    setIsSharedRoute(url.pathname.startsWith("/share") || sharedFlag);
+  }, []);
+
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.body.classList.toggle("share-page", isSharedRoute);
+      const root = document.getElementById("root");
+      if (root) root.classList.toggle("share-page", isSharedRoute);
+    }
+  }, [isSharedRoute]);
+
+  // Apply theme on mount
+  useEffect(() => {
+    document.body.classList.toggle('light', !isDarkMode);
+    document.body.classList.toggle('dark', isDarkMode);
+  }, [isDarkMode]);
+
   const showToast = (msg) => setToast(msg);
 
   const handleNewChat = () => {
     const id = `conv_${Date.now()}`;
     dispatch(addConversation({ id, title: "New Chat", createdAt: Date.now() }));
-    setMobileSidebarOpen(false);
+    dispatch(setSidebarOpen(false));
   };
 
   const handleSelectConv = (id) => {
     dispatch(setActiveConversation(id));
-    setMobileSidebarOpen(false);
+    dispatch(setSidebarOpen(false));
   };
 
-  // ── Shared-link gate: show public view regardless of auth state ────────
-  if (isSharedLink()) return <SharedView />;
+  if (isSharedRoute) {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        width: "100%",
+        background: "var(--bg)",
+        overflowY: "auto",
+        position: "relative",
+      }}>
+        <SharedView message={sharedMessage} sid={sharedSid} />
+      </div>
+    );
+  }
 
-  // ── Auth gate: show login/signup if not logged in ──────────────────────
   if (!user) return <AuthPage />;
 
   return (
@@ -75,31 +109,29 @@ export default function App() {
     }}>
       <AmbientBackground />
 
-      {/* Mobile overlay */}
-      {mobileSidebarOpen && (
+      {sidebarOpen && isMobileView && (
         <div
-          onClick={() => setMobileSidebarOpen(false)}
+          onClick={() => dispatch(setSidebarOpen(false))}
           style={{
-            position: "fixed", inset: 0, zIndex: 45,
-            background: "rgba(0,0,0,.55)", backdropFilter: "blur(3px)",
+            position: "fixed", inset: 0, zIndex: 8,
+            background: "rgba(0,0,0,.45)",
           }}
         />
       )}
 
-      {/* Sidebar — NO logout prop, logout is only in ChatHeader */}
       <Sidebar
         onNewChat={handleNewChat}
         onSelectConv={handleSelectConv}
-        isDarkMode={isDarkMode}
-        onToggleTheme={toggleTheme}
-        mobileSidebarOpen={mobileSidebarOpen}
-        onMobileClose={() => setMobileSidebarOpen(false)}
+        theme={isDarkMode ? 'dark' : 'light'}
+        onSetTheme={toggleTheme}
       />
 
       <ChatArea
         showToast={showToast}
         onShareMsg={setShareMsg}
-        onMobileMenuToggle={() => setMobileSidebarOpen(o => !o)}
+        onMobileMenuToggle={() => dispatch(setSidebarOpen(!sidebarOpen))}
+        onLogout={logout}
+        user={user}
       />
 
       {shareMsg && (

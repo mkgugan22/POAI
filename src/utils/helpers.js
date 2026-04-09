@@ -1,50 +1,96 @@
+/**
+ * Generate a unique ID string with an optional prefix.
+ */
 export function generateId(prefix = "id") {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 }
 
+/**
+ * Truncate text to a given character limit, appending "…" if cut.
+ */
 export function truncate(text, limit = 40) {
   if (!text) return "";
   return text.length > limit ? text.slice(0, limit) + "…" : text;
 }
 
+/**
+ * Format a timestamp (ms) to a human-readable HH:MM time string.
+ */
 export function formatTime(timestamp) {
   return new Date(timestamp).toLocaleTimeString([], {
-    hour: "2-digit", minute: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
+/**
+ * Download plain-text content as a .txt file.
+ */
 export function downloadAsText(content, filename = "response.txt") {
-  const blob   = new Blob([content], { type: "text/plain" });
-  const url    = URL.createObjectURL(blob);
+  const blob = new Blob([content], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
-  anchor.href     = url;
+  anchor.href = url;
   anchor.download = filename;
   anchor.click();
   URL.revokeObjectURL(url);
 }
 
+/**
+ * Copy text to clipboard and return a promise that resolves on success.
+ */
 export function copyToClipboard(text) {
-  return navigator.clipboard.writeText(text);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(text);
+  }
+
+  return new Promise((resolve, reject) => {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+
+    try {
+      const successful = document.execCommand("copy");
+      document.body.removeChild(textarea);
+      successful ? resolve() : reject(new Error("Copy failed"));
+    } catch (error) {
+      document.body.removeChild(textarea);
+      reject(error);
+    }
+  });
 }
 
-/**
- * Encodes the message content as base64 directly in the share URL.
- * No external API needed — works offline, no CORS issues, never fails.
- *
- * URL format: https://poultrybot.netlify.app/share?msg=<base64>
- *
- * SharedView decodes the base64 from the URL param on load.
- *
- * @param {string} messageContent
- * @returns {Promise<string>} The share URL (resolves immediately)
- */
-export async function buildShareUrl(messageContent) {
+function storageKeyForShare(sid) {
+  return `poultry-share-${sid}`;
+}
+
+function saveShareMessage(sid, messageContent) {
+  if (typeof localStorage === "undefined") return;
   try {
-    // Encode content as base64 (handles unicode via encodeURIComponent)
-    const encoded = btoa(unescape(encodeURIComponent(messageContent)));
-    const base = window.location.origin;
-    return `${base}/share?msg=${encoded}`;
-  } catch (err) {
-    throw new Error("Could not create share link. The response may be too long.");
+    localStorage.setItem(storageKeyForShare(sid), JSON.stringify({ messageContent, createdAt: Date.now() }));
+  } catch {
+    // ignore storage failures
   }
+}
+
+export function readShareMessage(sid) {
+  if (typeof localStorage === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(storageKeyForShare(sid));
+    return raw ? JSON.parse(raw).messageContent : null;
+  } catch {
+    return null;
+  }
+}
+
+export function buildShareUrl(messageContent, existingSid = null) {
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://poultry-expert.app";
+  const sid = existingSid || generateId("share");
+  saveShareMessage(sid, messageContent);
+  const encodedMessage = encodeURIComponent(messageContent);
+  return `${origin}/share?msg=${encodedMessage}&sid=${sid}&utm_source=chat`;
 }

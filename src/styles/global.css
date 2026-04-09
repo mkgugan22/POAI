@@ -178,12 +178,12 @@ button { font-family: 'Nunito', sans-serif; }
 
 /* ─── Responsive Design ───────────────────────────────────────────────────── */
 
-/* Tablet and Mobile */
+/* Tablet */
 @media (max-width: 1024px) {
-  /* Adjust sidebar for smaller screens */
   .sidebar {
     width: 0 !important;
   }
+  
   .sidebar.open {
     width: 280px !important;
     position: fixed;
@@ -191,107 +191,175 @@ button { font-family: 'Nunito', sans-serif; }
     left: 0;
     height: 100%;
     z-index: 1000;
-    background: var(--surface);
+    background: linear-gradient(180deg, var(--surface-strong), var(--surface));
     box-shadow: 2px 0 10px rgba(0,0,0,0.3);
   }
 
-  /* Chat area adjustments */
   .chat-area {
-    padding: 10px;
+    padding: 12px;
   }
 
-  /* Message bubbles smaller */
   .message-bubble {
-    max-width: 90% !important;
-    padding: 10px 14px !important;
+    max-width: 85% !important;
+    padding: 12px 14px !important;
     font-size: 14px !important;
   }
 
-  /* Header smaller */
+  .msg-content {
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+  }
+
   .chat-header {
-    padding: 10px 15px !important;
+    padding: 12px 15px !important;
   }
 
   .chat-header .brand {
     font-size: 16px !important;
   }
+}
 
-  .chat-header .subtitle {
+/* Mobile - iPad and larger phones */
+@media (max-width: 768px) {
+  html, body, #root {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .sidebar.open {
+    width: 260px !important;
+    box-shadow: -2px 0 12px rgba(0,0,0,0.4);
+  }
+
+  .chat-area {
+    padding: 8px;
+    flex: 1;
+  }
+
+  .message-bubble {
+    max-width: 88% !important;
+    padding: 10px 12px !important;
+    font-size: 13px !important;
+  }
+
+  .msg-content {
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+  }
+
+  .chat-header {
+    padding: 10px 12px !important;
+    gap: 8px !important;
+  }
+
+  .chat-header .brand {
+    font-size: 13px !important;
+  }
+
+  .welcome-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .feature-card {
+    padding: 14px 12px !important;
+    font-size: 12px !important;
+  }
+
+  .action-btn {
+    padding: 4px 9px !important;
     font-size: 10px !important;
+  }
+
+  textarea {
+    font-size: 14px !important;
+    padding: 10px 12px !important;
   }
 }
 
-/* Mobile */
-@media (max-width: 768px) {
-  /* Sidebar overlay */
+/* Small Mobile - phones */
+@media (max-width: 480px) {
   .sidebar.open {
-    width: 250px !important;
+    width: 70vw !important;
+    max-width: 240px !important;
   }
 
-  /* Chat area more compact */
   .chat-area {
     padding: 5px;
   }
 
-  /* Smaller bubbles */
   .message-bubble {
-    max-width: 95% !important;
-    padding: 8px 12px !important;
-    font-size: 13px !important;
+    max-width: 92% !important;
+    padding: 8px 10px !important;
+    font-size: 12px !important;
   }
 
-  /* Header very small */
+  .msg-content {
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+  }
+
+  .msg-content p.md-p {
+    margin-bottom: 6px !important;
+  }
+
+  .msg-content h1.md-h1 {
+    font-size: 15px !important;
+    margin: 10px 0 4px !important;
+  }
+
+  .msg-content h2.md-h2 {
+    font-size: 13px !important;
+    margin: 8px 0 3px !important;
+  }
+
+  .msg-content h3.md-h3 {
+    font-size: 11px !important;
+    margin: 8px 0 3px !important;
+  }
+
   .chat-header {
-    padding: 8px 12px !important;
+    padding: 8px 10px !important;
+    gap: 6px !important;
   }
 
   .chat-header .brand {
-    font-size: 14px !important;
+    font-size: 12px !important;
   }
 
-  .chat-header .subtitle {
-    font-size: 9px !important;
-  }
-
-  /* Welcome screen grid */
   .welcome-grid {
     grid-template-columns: 1fr !important;
     gap: 8px !important;
   }
 
   .feature-card {
-    padding: 12px 10px !important;
+    padding: 11px 10px !important;
+    font-size: 11px !important;
   }
 
-  /* Action buttons smaller */
   .action-btn {
     padding: 3px 8px !important;
-    font-size: 10px !important;
+    font-size: 9px !important;
+  }
+
+  textarea {
+    font-size: 13px !important;
+    padding: 8px 10px !important;
   }
 }
 
-/* Small Mobile */
-@media (max-width: 480px) {
+/* Extra Small Mobile - small phones */
+@media (max-width: 360px) {
   .message-bubble {
-    max-width: 98% !important;
-    padding: 6px 10px !important;
-    font-size: 12px !important;
+    max-width: 96% !important;
   }
 
   .chat-header .brand {
-    font-size: 12px !important;
-  }
-
-  .chat-header .subtitle {
-    font-size: 8px !important;
-  }
-
-  .welcome-grid {
-    gap: 6px !important;
+    font-size: 11px !important;
   }
 
   .feature-card {
-    padding: 10px 8px !important;
-    font-size: 11px !important;
+    padding: 9px 8px !important;
+    font-size: 10px !important;
   }
 }

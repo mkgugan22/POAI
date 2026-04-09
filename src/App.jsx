@@ -66,8 +66,8 @@ export default function App() {
       <Sidebar
         onNewChat={handleNewChat}
         onSelectConv={handleSelectConv}
-        isDarkMode={isDarkMode}
-        onToggleTheme={toggleTheme}
+        theme={isDarkMode ? 'dark' : 'light'}
+        onSetTheme={(mode) => toggleTheme(mode === 'light')}
         mobileSidebarOpen={mobileSidebarOpen}
         onMobileClose={() => setMobileSidebarOpen(false)}
       />

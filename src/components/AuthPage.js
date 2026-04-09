@@ -110,7 +110,7 @@ export default function AuthPage() {
     <div style={{
       minHeight:'100vh', minHeight:'100dvh', display:'flex', alignItems:'center',
       justifyContent:'center', background:'#0a0e1a',
-      padding:'20px', boxSizing:'border-box', position:'relative', overflow:'hidden',
+      padding:'16px', boxSizing:'border-box', position:'relative', overflow:'hidden',
     }}>
       <style>{CSS}</style>
 
@@ -138,7 +138,7 @@ export default function AuthPage() {
       <div style={{
         position:'relative', zIndex:1, width:'100%', maxWidth:420,
         background:'rgba(20,26,40,.92)', border:'1px solid rgba(100,150,255,.18)',
-        borderRadius:20, padding:'36px 36px 28px',
+        borderRadius:20, padding:'clamp(24px, 5%, 36px) clamp(24px, 5%, 36px) clamp(20px, 4%, 28px)',
         backdropFilter:'blur(24px)',
         boxShadow:'0 0 0 1px rgba(0,210,255,.06),0 24px 64px rgba(0,0,0,.5),0 0 80px rgba(124,58,237,.08)',
         animation:'authIn .5s cubic-bezier(.16,1,.3,1)',
@@ -157,13 +157,13 @@ export default function AuthPage() {
           </div>
           <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
             <span style={{
-              fontFamily:"'Fraunces',serif", fontSize:26, fontWeight:900,
-              color:'#00d2ff', letterSpacing:4, textShadow:'0 0 20px rgba(0,210,255,.4)', lineHeight:1,
-            }}>FSAI</span>
+              fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:900,
+              color:'#00d2ff', letterSpacing:2, textShadow:'0 0 20px rgba(0,210,255,.4)', lineHeight:1,
+            }}>Poultry Expert AI</span>
             <span style={{
               fontFamily:"'Syne',sans-serif", fontSize:9, fontWeight:700,
               color:'#b8c4d8', letterSpacing:1.5, textTransform:'uppercase', whiteSpace:'nowrap',
-            }}>Full-Stack Debug Agent</span>
+            }}>AI Farming Consultant</span>
           </div>
         </div>
 

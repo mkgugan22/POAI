@@ -4,13 +4,11 @@ import {  deleteConversation } from "../../store/actions/chatActions";
 import { PlusIcon, TrashIcon, ChatIcon } from "../UI/Icons";
 import { truncate } from "../../utils/helpers";
 
-export default function Sidebar({ onNewChat, onSelectConv, theme, onSetTheme, mobileSidebarOpen, onMobileClose }) {
+export default function Sidebar({ onNewChat, onSelectConv, theme, onSetTheme }) {
   const dispatch = useDispatch();
   const { conversationList, activeConversationId, sidebarOpen, conversations } =
     useSelector((s) => s.chat);
-  
-  // Use mobileSidebarOpen if provided (mobile), otherwise use Redux sidebarOpen (desktop)
-  const isOpen = mobileSidebarOpen !== undefined ? mobileSidebarOpen : sidebarOpen;
+  const isOpen = sidebarOpen;
 
   return (
     <aside
@@ -28,7 +26,7 @@ export default function Sidebar({ onNewChat, onSelectConv, theme, onSetTheme, mo
         zIndex: 10,
       }}
     >
-      <div style={{ minWidth: 280, height: "100%", display: "flex", flexDirection: "column" }}>
+      <div style={{ width: "100%", minWidth: 0, height: "100%", display: "flex", flexDirection: "column" }}>
         {/* ── Logo ── */}
         <div
           style={{

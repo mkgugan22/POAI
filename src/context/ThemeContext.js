@@ -17,12 +17,10 @@ export function ThemeProvider({ children }) {
     document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
   }, [isDarkMode]);
 
-  const toggleTheme = (isLight) => {
-    if (typeof isLight === 'boolean') {
-      setIsDarkMode(!isLight);
-    } else {
-      setIsDarkMode(prev => !prev);
-    }
+  const toggleTheme = (value) => {
+    if (value === 'light') return setIsDarkMode(false);
+    if (value === 'dark') return setIsDarkMode(true);
+    setIsDarkMode(prev => !prev);
   };
 
   return (

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Sidebar           from "./components/Sidebar/Sidebar";
 import ChatArea          from "./components/Chat/ChatArea";
 import ShareModal        from "./components/Modals/ShareModal";
@@ -10,6 +10,7 @@ import {
   addConversation,
   setActiveConversation,
   resetForUser,
+  setSidebarOpen,
 } from "./store/actions/chatActions";
 import { useAuth }  from "./context/AuthContext";
 import { useTheme } from "./context/ThemeContext";
@@ -18,9 +19,10 @@ export default function App() {
   const dispatch = useDispatch();
   const { user, logout }            = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
+  const sidebarOpen                 = useSelector((s) => s.chat.sidebarOpen);
   const [shareMsg, setShareMsg]     = useState(null);
   const [toast, setToast]           = useState(null);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
 
   const prevUserIdRef = useRef(null);
   useEffect(() => {
@@ -30,6 +32,14 @@ export default function App() {
       dispatch(resetForUser(uid));
     }
   }, [user, dispatch]);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1024px)");
+    const handleResize = () => setIsMobileView(mq.matches);
+    handleResize();
+    mq.addEventListener("change", handleResize);
+    return () => mq.removeEventListener("change", handleResize);
+  }, []);
 
   // Apply theme on mount
   useEffect(() => {
@@ -42,12 +52,12 @@ export default function App() {
   const handleNewChat = () => {
     const id = `conv_${Date.now()}`;
     dispatch(addConversation({ id, title: "New Chat", createdAt: Date.now() }));
-    setMobileSidebarOpen(false);
+    dispatch(setSidebarOpen(false));
   };
 
   const handleSelectConv = (id) => {
     dispatch(setActiveConversation(id));
-    setMobileSidebarOpen(false);
+    dispatch(setSidebarOpen(false));
   };
 
   if (!user) return <AuthPage />;
@@ -59,12 +69,12 @@ export default function App() {
     }}>
       <AmbientBackground />
 
-      {mobileSidebarOpen && (
+      {sidebarOpen && isMobileView && (
         <div
-          onClick={() => setMobileSidebarOpen(false)}
+          onClick={() => dispatch(setSidebarOpen(false))}
           style={{
-            position: "fixed", inset: 0, zIndex: 45,
-            background: "rgba(0,0,0,.55)", backdropFilter: "blur(3px)",
+            position: "fixed", inset: 0, zIndex: 8,
+            background: "rgba(0,0,0,.45)",
           }}
         />
       )}
@@ -74,14 +84,12 @@ export default function App() {
         onSelectConv={handleSelectConv}
         theme={isDarkMode ? 'dark' : 'light'}
         onSetTheme={toggleTheme}
-        mobileSidebarOpen={mobileSidebarOpen}
-        onMobileClose={() => setMobileSidebarOpen(false)}
       />
 
       <ChatArea
         showToast={showToast}
         onShareMsg={setShareMsg}
-        onMobileMenuToggle={() => setMobileSidebarOpen(o => !o)}
+        onMobileMenuToggle={() => dispatch(setSidebarOpen(!sidebarOpen))}
         onLogout={logout}
         user={user}
       />

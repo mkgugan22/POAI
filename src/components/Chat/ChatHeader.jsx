@@ -1,25 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { setSidebarOpen } from "../../store/actions/chatActions";
+import { MenuIcon } from "../UI/Icons";
+import { useAuth } from "../../context/AuthContext";
 
-const CSS = `
-  @keyframes dropIn { from{opacity:0;transform:translateY(-8px) scale(.96)} to{opacity:1;transform:translateY(0) scale(1)} }
-  @keyframes orbPulse { 0%,100%{box-shadow:0 0 14px rgba(0,210,255,.3)} 50%{box-shadow:0 0 28px rgba(0,210,255,.55)} }
-  .fsai-avatar-btn { transition:all .2s; }
-  .fsai-avatar-btn:hover { transform:scale(1.07)!important; box-shadow:0 0 22px rgba(0,210,255,.5)!important; }
-  .fsai-logout-btn { transition:background .18s; }
-  .fsai-logout-btn:hover { background:rgba(255,95,95,.12)!important; }
-`;
-
-export default function ChatHeader({
-  title,
-  onNewChat,
-  onMobileMenuToggle,
-  isDarkMode,
-  onToggleTheme,
-  onLogout,
-  user,
-  // any other props your existing ChatHeader uses
-  ...rest
-}) {
+export default function ChatHeader({ onMobileMenuToggle }) {
+  const dispatch = useDispatch();
+  const { sidebarOpen, isLoading } = useSelector((s) => s.chat);
+  const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -32,134 +20,227 @@ export default function ChatHeader({
   }, []);
 
   return (
-    <div style={{
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      padding: "0 20px", height: 60, flexShrink: 0,
-      borderBottom: "1px solid rgba(100,150,255,.12)",
-      background: "rgba(20,26,40,.85)", backdropFilter: "blur(20px)",
-      position: "relative", zIndex: 10, gap: 12,
+    <header style={{
+      padding: "10px 16px",
+      borderBottom: "1px solid var(--border)",
+      background: "var(--surface)",
+      backdropFilter: "blur(20px)",
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      flexShrink: 0,
+      zIndex: 5,
+      position: "relative",
+      minHeight: 56,
+      overflow: "visible",
     }}>
-      <style>{CSS}</style>
 
-      {/* Left side */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-        {/* Mobile hamburger */}
-        {onMobileMenuToggle && (
-          <button onClick={onMobileMenuToggle} style={{
-            display: "flex", alignItems: "center", justifyContent: "center",
-            width: 34, height: 34, borderRadius: 8,
-            background: "rgba(30,37,56,.7)", border: "1px solid rgba(100,150,255,.2)",
-            color: "#b8c4d8", fontSize: 16, cursor: "pointer", flexShrink: 0,
-          }}>☰</button>
-        )}
+      {/* Desktop sidebar toggle */}
+      <button
+        onClick={() => dispatch(setSidebarOpen(!sidebarOpen))}
+        title="Toggle sidebar"
+        style={{
+          background: "var(--surface-soft)", border: "1px solid var(--border)",
+          borderRadius: 10, padding: 8, cursor: "pointer", color: "var(--muted)",
+          display: "flex", alignItems: "center", transition: "all .2s",
+          flexShrink: 0, minWidth: 36,
+        }}
+        className="desktop-sidebar-toggle"
+        onMouseEnter={e => e.currentTarget.style.background = "rgba(138,161,118,.16)"}
+        onMouseLeave={e => e.currentTarget.style.background = "var(--surface-soft)"}
+      >
+        <MenuIcon size={20} />
+      </button>
 
-        {/* Conversation title */}
-        <span style={{
-          fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 700,
-          color: "#f0f4ff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-        }}>{title || "New Chat"}</span>
+      {/* Mobile sidebar toggle */}
+      <button
+        onClick={onMobileMenuToggle}
+        title="Menu"
+        style={{
+          background: "var(--surface-soft)", border: "1px solid var(--border)",
+          borderRadius: 10, padding: 8, cursor: "pointer", color: "var(--muted)",
+          alignItems: "center", transition: "all .2s",
+          flexShrink: 0, minWidth: 36,
+          display: "none",
+        }}
+        className="mobile-menu-btn"
+        onMouseEnter={e => e.currentTarget.style.background = "rgba(138,161,118,.16)"}
+        onMouseLeave={e => e.currentTarget.style.background = "var(--surface-soft)"}
+      >
+        <MenuIcon size={20} />
+      </button>
+
+      {/* Brand — flex:1 with minWidth:0 so it shrinks and never pushes avatar off-screen */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 10,
+        flex: 1, minWidth: 0, overflow: "hidden",
+      }}>
+        <div style={{
+          fontSize: 28, flexShrink: 0,
+          filter: "drop-shadow(0 2px 8px rgba(0,0,0,.18))",
+        }}>🐔</div>
+        <div style={{ minWidth: 0, overflow: "hidden" }}>
+          <div style={{
+            fontFamily: "'Playfair Display', serif", fontSize: 17,
+            fontWeight: 800, color: "var(--text)",
+            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+          }}>
+            Poultry Expert AI
+          </div>
+          <div style={{
+            fontSize: 11, color: "var(--muted)",
+            fontFamily: "'Nunito', sans-serif",
+            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+          }}>
+            Your Virtual Farming Consultant
+          </div>
+        </div>
       </div>
 
-      {/* Right side */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-        {/* New Chat button */}
-        {onNewChat && (
-          <button onClick={onNewChat} style={{
-            display: "flex", alignItems: "center", gap: 5,
-            padding: "6px 12px", borderRadius: 8,
-            background: "rgba(0,210,255,.1)", border: "1px solid rgba(0,210,255,.25)",
-            color: "#00d2ff", fontFamily: "'Syne',sans-serif", fontSize: 11,
-            fontWeight: 800, letterSpacing: 1, cursor: "pointer",
-            whiteSpace: "nowrap", textTransform: "uppercase",
-          }}>
-            + New Chat
+      {/* Status pill — hidden on mobile so avatar always has room */}
+      <div
+        className="status-pill"
+        style={{
+          display: "flex", alignItems: "center", gap: 7,
+          background: "var(--surface-soft)", borderRadius: 20,
+          padding: "6px 12px", border: "1px solid var(--border)",
+          flexShrink: 0, whiteSpace: "nowrap",
+        }}
+      >
+        <div style={{
+          width: 7, height: 7, borderRadius: "50%",
+          background: isLoading ? "#d4a14d" : "var(--accent)",
+          animation: "pulseGlow 2s infinite",
+        }} />
+        <span style={{
+          fontSize: 12,
+          color: isLoading ? "#d4a14d" : "var(--accent-strong)",
+          fontFamily: "'Nunito', sans-serif", fontWeight: 700,
+        }}>
+          {isLoading ? "Thinking…" : "Online"}
+        </span>
+      </div>
+
+      {/* ── User avatar + dropdown — always visible, never hidden ── */}
+      {user && (
+        <div
+          ref={menuRef}
+          style={{ position: "relative", flexShrink: 0, zIndex: 100 }}
+        >
+          <button
+            onClick={() => setMenuOpen(o => !o)}
+            title={`${user.name} — click to sign out`}
+            style={{
+              width: 38, height: 38, borderRadius: "50%",
+              background: "linear-gradient(135deg, rgba(138,161,118,1), rgba(107,129,98,1))",
+              border: "2px solid rgba(138,161,118,.55)",
+              cursor: "pointer", display: "flex", alignItems: "center",
+              justifyContent: "center",
+              fontFamily: "'Nunito', sans-serif", fontSize: 15,
+              fontWeight: 900, color: "#fff",
+              boxShadow: "0 0 12px rgba(138,161,118,.35)",
+              transition: "all .2s",
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.boxShadow = "0 0 22px rgba(138,161,118,.65)";
+              e.currentTarget.style.transform = "scale(1.08)";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.boxShadow = "0 0 12px rgba(138,161,118,.35)";
+              e.currentTarget.style.transform = "scale(1)";
+            }}
+          >
+            {user.avatar}
           </button>
-        )}
 
-        {/* Theme toggle */}
-        {onToggleTheme && (
-          <button onClick={onToggleTheme} title={isDarkMode ? "Light mode" : "Dark mode"} style={{
-            width: 32, height: 32, borderRadius: 8, fontSize: 15, cursor: "pointer",
-            background: "rgba(30,37,56,.7)", border: "1px solid rgba(100,150,255,.2)",
-            color: "#b8c4d8", display: "flex", alignItems: "center", justifyContent: "center",
-            transition: "all .2s",
-          }}>
-            {isDarkMode ? "☀️" : "🌙"}
-          </button>
-        )}
-
-        {/* User avatar + dropdown */}
-        {user && (
-          <div ref={menuRef} style={{ position: "relative" }}>
-            <button
-              className="fsai-avatar-btn"
-              onClick={() => setMenuOpen(o => !o)}
-              style={{
-                width: 34, height: 34, borderRadius: "50%",
-                background: "linear-gradient(135deg,#7c3aed,#00d2ff)",
-                border: "2px solid rgba(0,210,255,.4)",
-                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                boxShadow: "0 0 14px rgba(0,210,255,.3)", flexShrink: 0,
-                animation: "orbPulse 3s ease-in-out infinite",
-              }}
-            >
-              <span style={{ fontFamily: "'Syne',sans-serif", fontSize: 13, fontWeight: 900, color: "#fff" }}>
-                {user.avatar || user.name?.[0]?.toUpperCase() || "U"}
-              </span>
-            </button>
-
-            {menuOpen && (
+          {/* Dropdown — uses position:fixed so it's never clipped by parent overflow */}
+          {menuOpen && (
+            <div style={{
+              position: "fixed",
+              top: 62,
+              right: 16,
+              minWidth: 230,
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+              borderRadius: 14, padding: 6,
+              boxShadow: "0 16px 48px rgba(0,0,0,.55), 0 0 0 1px rgba(138,161,118,.08)",
+              animation: "dropIn .2s cubic-bezier(.16,1,.3,1)",
+              zIndex: 9999,
+              backdropFilter: "blur(24px)",
+            }}>
+              {/* User info */}
               <div style={{
-                position: "absolute", top: "calc(100% + 10px)", right: 0, minWidth: 210,
-                background: "rgba(20,26,40,.97)", border: "1px solid rgba(100,150,255,.2)",
-                borderRadius: 12, padding: 6,
-                boxShadow: "0 16px 40px rgba(0,0,0,.5),0 0 0 1px rgba(0,210,255,.06)",
-                backdropFilter: "blur(20px)",
-                animation: "dropIn .2s cubic-bezier(.16,1,.3,1)", zIndex: 100,
+                display: "flex", alignItems: "center", gap: 10,
+                padding: "10px 10px 8px",
               }}>
-                {/* User info */}
-                <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 10px 8px" }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: "50%", flexShrink: 0,
+                  background: "linear-gradient(135deg, rgba(138,161,118,1), rgba(107,129,98,1))",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontFamily: "'Nunito', sans-serif", fontSize: 17,
+                  fontWeight: 900, color: "#fff",
+                }}>
+                  {user.avatar}
+                </div>
+                <div style={{ minWidth: 0 }}>
                   <div style={{
-                    width: 38, height: 38, borderRadius: "50%",
-                    background: "linear-gradient(135deg,#7c3aed,#00d2ff)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontFamily: "'Syne',sans-serif", fontSize: 16, fontWeight: 900, color: "#fff", flexShrink: 0,
+                    fontFamily: "'Nunito', sans-serif", fontSize: 13,
+                    fontWeight: 700, color: "var(--text)",
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                    maxWidth: 150,
                   }}>
-                    {user.avatar || user.name?.[0]?.toUpperCase() || "U"}
+                    {user.name}
                   </div>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: 13, fontWeight: 700,
-                      color: "#f0f4ff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {user.name}
-                    </div>
-                    <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10.5, fontWeight: 500,
-                      color: "#7a8aaa", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {user.email}
-                    </div>
+                  <div style={{
+                    fontFamily: "monospace", fontSize: 11,
+                    color: "var(--muted)",
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                    maxWidth: 150,
+                  }}>
+                    {user.email}
                   </div>
                 </div>
-
-                <div style={{ height: 1, background: "rgba(100,150,255,.12)", margin: "4px 0" }} />
-
-                {/* Logout */}
-                <button
-                  className="fsai-logout-btn"
-                  onClick={() => { setMenuOpen(false); onLogout && onLogout(); }}
-                  style={{
-                    width: "100%", display: "flex", alignItems: "center", gap: 8,
-                    padding: "9px 10px", borderRadius: 8, background: "transparent", border: "none",
-                    color: "#ff5f5f", fontFamily: "'Syne',sans-serif", fontSize: 11,
-                    fontWeight: 800, letterSpacing: 1, cursor: "pointer", textAlign: "left",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  <span>⎋</span> Sign Out
-                </button>
               </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+
+              {/* Divider */}
+              <div style={{ height: 1, background: "var(--border)", margin: "4px 0" }} />
+
+              {/* Sign out */}
+              <button
+                onClick={() => { setMenuOpen(false); logout(); }}
+                style={{
+                  width: "100%", display: "flex", alignItems: "center", gap: 8,
+                  padding: "9px 10px", borderRadius: 8,
+                  background: "transparent", border: "none",
+                  color: "#f87171",
+                  fontFamily: "'Nunito', sans-serif", fontSize: 13,
+                  fontWeight: 800, cursor: "pointer",
+                  transition: "background .2s", letterSpacing: .5,
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = "rgba(220,80,80,.12)"}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+              >
+                <span style={{ fontSize: 16 }}>⎋</span> Sign Out
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      <style>{`
+        @keyframes dropIn {
+          from { opacity:0; transform:translateY(-8px) scale(.96); }
+          to   { opacity:1; transform:translateY(0)   scale(1);   }
+        }
+        @media (max-width: 768px) {
+          .desktop-sidebar-toggle { display: none !important; }
+          .mobile-menu-btn        { display: flex !important; }
+          .status-pill            { display: none !important; }
+        }
+        @media (max-width: 480px) {
+          .status-pill { display: none !important; }
+        }
+      `}</style>
+    </header>
   );
 }

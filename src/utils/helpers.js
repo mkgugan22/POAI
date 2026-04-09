@@ -72,18 +72,38 @@ export function copyToClipboard(text) {
  * @param {string} messageContent
  * @returns {string} The share URL (synchronous — no async needed)
  */
+function base64EncodeUnicode(str) {
+  return btoa(
+    encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_match, p1) =>
+      String.fromCharCode(Number(`0x${p1}`))
+    )
+  );
+}
+
+function base64DecodeUnicode(str) {
+  try {
+    return decodeURIComponent(
+      atob(str)
+        .split("")
+        .map((c) => `%${(`00${c.charCodeAt(0).toString(16)}`).slice(-2)}`)
+        .join("")
+    );
+  } catch {
+    return null;
+  }
+}
+
 export function buildShareUrl(messageContent) {
   const origin = typeof window !== "undefined"
     ? window.location.origin
     : "https://poultrybot.netlify.app";
   try {
-    const encoded = btoa(unescape(encodeURIComponent(messageContent)));
-    return `${origin}/share?msg=${encoded}`;
+    const encoded = base64EncodeUnicode(messageContent);
+    return `${origin}/share?msg=${encodeURIComponent(encoded)}`;
   } catch {
-    // Fallback: truncate content to avoid very large URLs
     const safe = messageContent.slice(0, 2000);
-    const encoded = btoa(unescape(encodeURIComponent(safe)));
-    return `${origin}/share?msg=${encoded}`;
+    const encoded = base64EncodeUnicode(safe);
+    return `${origin}/share?msg=${encodeURIComponent(encoded)}`;
   }
 }
 
@@ -97,7 +117,8 @@ export function buildShareUrl(messageContent) {
 export function decodeShareMsg(encoded) {
   if (!encoded) return null;
   try {
-    return decodeURIComponent(escape(atob(encoded)));
+    const decodedParam = decodeURIComponent(encoded);
+    return base64DecodeUnicode(decodedParam);
   } catch {
     return null;
   }

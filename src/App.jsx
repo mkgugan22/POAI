@@ -29,6 +29,16 @@ export default function App() {
   const [isSharedRoute, setIsSharedRoute] = useState(false);
 
   const prevUserIdRef = useRef(null);
+
+  const safeDecode = (value) => {
+    if (!value) return null;
+    try {
+      return decodeURIComponent(value.replace(/\+/g, " "));
+    } catch {
+      return value;
+    }
+  };
+
   useEffect(() => {
     const uid = user?.id ?? "guest";
     if (uid !== prevUserIdRef.current) {
@@ -38,21 +48,13 @@ export default function App() {
   }, [user, dispatch]);
 
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 1024px)");
-    const handleResize = () => setIsMobileView(mq.matches);
-    handleResize();
-    mq.addEventListener("change", handleResize);
-    return () => mq.removeEventListener("change", handleResize);
-  }, []);
-
-  useEffect(() => {
     const url = new URL(window.location.href);
     const params = url.searchParams;
     const rawMessage = params.get("msg");
     const sharedFlag = params.get("shared") === "true";
     const sid = params.get("sid");
 
-    setSharedMessage(rawMessage ? decodeURIComponent(rawMessage) : null);
+    setSharedMessage(rawMessage ? safeDecode(rawMessage) : null);
     setSharedSid(sid);
     setIsSharedRoute(
       url.pathname.startsWith("/share") ||

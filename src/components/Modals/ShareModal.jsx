@@ -145,6 +145,7 @@ export default function ShareModal({ message, onClose, showToast }) {
         {/* Action buttons */}
         <div style={{ display: "flex", gap: 10 }}>
           <button
+            type="button"
             onClick={handleCopyLink}
             style={{
               flex: 1,
@@ -179,6 +180,7 @@ export default function ShareModal({ message, onClose, showToast }) {
           </button>
 
           <button
+            type="button"
             onClick={handleCopyText}
             style={{
               flex: 1,

@@ -67,7 +67,7 @@ export default function SharedView({ message, sid }) {
           </div>
 
           <a
-            href="/"
+            href={sid ? `/?sid=${sid}` : "/"}
             style={{
               padding: "12px 20px",
               borderRadius: 14,
@@ -112,10 +112,25 @@ export default function SharedView({ message, sid }) {
                 wordBreak: "break-word",
                 overflowWrap: "anywhere",
               }}>
-                {shareActive ? shareUrl : "Loading URL..."}
+                {shareActive ? (
+                  <a
+                    href={shareUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      color: "var(--accent)",
+                      textDecoration: "none",
+                    }}
+                  >
+                    {shareUrl}
+                  </a>
+                ) : (
+                  "Loading URL..."
+                )}
               </div>
 
               <button
+                type="button"
                 onClick={handleCopyLink}
                 disabled={!shareActive}
                 style={{
@@ -168,6 +183,7 @@ export default function SharedView({ message, sid }) {
           {hasMessage && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
               <button
+                type="button"
                 onClick={handleCopyText}
                 style={{
                   borderRadius: 14,
@@ -199,7 +215,7 @@ export default function SharedView({ message, sid }) {
               Sign in or create a free account to ask your own poultry questions.
             </div>
             <a
-              href="/"
+              href={sid ? `/?sid=${sid}` : "/"}
               style={{
                 padding: "14px 22px",
                 borderRadius: 16,

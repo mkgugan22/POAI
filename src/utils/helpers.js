@@ -40,7 +40,28 @@ export function downloadAsText(content, filename = "response.txt") {
  * Copy text to clipboard and return a promise that resolves on success.
  */
 export function copyToClipboard(text) {
-  return navigator.clipboard.writeText(text);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(text);
+  }
+
+  return new Promise((resolve, reject) => {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+
+    try {
+      const successful = document.execCommand("copy");
+      document.body.removeChild(textarea);
+      successful ? resolve() : reject(new Error("Copy failed"));
+    } catch (error) {
+      document.body.removeChild(textarea);
+      reject(error);
+    }
+  });
 }
 
 /**

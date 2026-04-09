@@ -140,6 +140,29 @@ body.light {
   font-family: 'Courier New', monospace;
 }
 .msg-content hr.md-hr         { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+.msg-content table.md-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  overflow-x: auto;
+  display: block;
+  font-size: 14px;
+}
+.msg-content table.md-table th,
+.msg-content table.md-table td {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 12px 14px;
+  text-align: left;
+  min-width: 80px;
+}
+.msg-content table.md-table th {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--accent);
+  font-weight: 700;
+}
+.msg-content table.md-table tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.03);
+}
 .msg-content strong           { color: var(--text); font-weight: 700; }
 .msg-content em               { color: var(--muted); font-style: italic; }
 

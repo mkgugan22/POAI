@@ -1,15 +1,46 @@
 /**
  * Converts a subset of Markdown to safe HTML for rendering inside dangerouslySetInnerHTML.
- * Supported: bold, italic, inline code, h1-h3, hr, blockquotes, ul/ol lists, paragraphs.
+ * Supported: bold, italic, inline code, h1-h3, hr, blockquotes, ul/ol lists, tables, paragraphs.
  */
 export function renderMarkdown(text) {
   if (!text) return "";
 
-  let html = text
-    // Escape HTML entities first
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
+  const escapeHtml = (value) =>
+    value
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+  const renderInline = (value) =>
+    value
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.+?)\*/g, "<em>$1</em>")
+      .replace(/`(.+?)`/g, '<code class="md-inline-code">$1</code>');
+
+  const renderTable = (block) => {
+    const rows = block
+      .trim()
+      .split(/\r?\n/)
+      .map((line) => line.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((cell) => cell.trim()));
+
+    if (rows.length < 2) return block;
+
+    const headerCells = rows[0].map((cell) => `<th>${renderInline(cell)}</th>`).join("");
+    const bodyRows = rows.slice(2).map(
+      (row) => `<tr>${row.map((cell) => `<td>${renderInline(cell)}</td>`).join("")}</tr>`
+    );
+
+    return `\n\n<table class="md-table"><thead><tr>${headerCells}</tr></thead><tbody>${bodyRows.join("")}</tbody></table>\n\n`;
+  };
+
+  let html = escapeHtml(text);
+
+  html = html.replace(
+    /^\s*\|?.+\|.*\r?\n\s*\|?[-:\s|]+\r?\n(?:\s*\|?.*\|.*\r?\n?)+/gm,
+    (match) => renderTable(match)
+  );
+
+  html = html
     // Bold & italic
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/\*(.+?)\*/g, "<em>$1</em>")

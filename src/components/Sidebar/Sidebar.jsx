@@ -177,7 +177,7 @@ export default function Sidebar({ onNewChat, onSelectConv, theme, onSetTheme }) 
                 marginBottom: 3,
               }}
             >
-              🌿 Powered by Mistral AI
+              🌿 Powered by G7 AI
             </div>
             <div
               style={{

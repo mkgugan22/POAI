@@ -1,7 +1,7 @@
 // ─── Mistral API ────────────────────────────────────────────────────────────
 export const MISTRAL_API_KEY = "BJbSl3nJqWLiixhWxeVXPOQPqh0cWZAo";
 export const MISTRAL_AGENT_ID = "ag_019d5c35368b713996d1d757d274850d";
-export const MISTRAL_AGENT_VERSION = 2;
+export const MISTRAL_AGENT_VERSION = 3;
 export const MISTRAL_BASE_URL = "https://api.mistral.ai/v1";
 
 // ─── Suggestion Chips ───────────────────────────────────────────────────────

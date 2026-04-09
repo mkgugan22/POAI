@@ -220,9 +220,9 @@ export default function ShareModal({ message, onClose, showToast }) {
               marginBottom: 10,
             }}
           >
-            SHARE VIA
+            {/* SHARE VIA */}
           </div>
-          <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+          {/* <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
             {[
               { icon: "💬", label: "WhatsApp", href: `https://wa.me/?text=${encodeURIComponent(shareUrl)}` },
               { icon: "✉️", label: "Email",    href: `mailto:?subject=Poultry Expert Advice&body=${encodeURIComponent(shareUrl)}` },
@@ -260,7 +260,7 @@ export default function ShareModal({ message, onClose, showToast }) {
                 {s.icon} {s.label}
               </a>
             ))}
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

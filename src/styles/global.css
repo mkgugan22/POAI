@@ -176,6 +176,15 @@ textarea:focus { outline: none; }
 /* ─── Button base ────────────────────────────────────────────────────────── */
 button { font-family: 'Nunito', sans-serif; }
 
+/* ─── Desktop sidebar toggle ───────────────────────────────────────────────── */
+.desktop-sidebar-toggle {
+  display: flex !important;
+}
+
+.mobile-menu-btn {
+  display: none !important;
+}
+
 /* ─── Responsive Design ───────────────────────────────────────────────────── */
 
 /* Tablet */
@@ -217,6 +226,18 @@ button { font-family: 'Nunito', sans-serif; }
   .chat-header .brand {
     font-size: 16px !important;
   }
+  
+  .status-pill {
+    display: flex !important;
+  }
+  
+  .desktop-sidebar-toggle {
+    display: none !important;
+  }
+  
+  .mobile-menu-btn {
+    display: flex !important;
+  }
 }
 
 /* Mobile - iPad and larger phones */
@@ -255,6 +276,10 @@ button { font-family: 'Nunito', sans-serif; }
   .chat-header .brand {
     font-size: 13px !important;
   }
+  
+  .status-pill {
+    display: none !important;
+  }
 
   .welcome-grid {
     grid-template-columns: 1fr !important;
@@ -274,6 +299,14 @@ button { font-family: 'Nunito', sans-serif; }
   textarea {
     font-size: 14px !important;
     padding: 10px 12px !important;
+  }
+
+  .desktop-sidebar-toggle {
+    display: none !important;
+  }
+  
+  .mobile-menu-btn {
+    display: flex !important;
   }
 }
 
@@ -321,10 +354,15 @@ button { font-family: 'Nunito', sans-serif; }
   .chat-header {
     padding: 8px 10px !important;
     gap: 6px !important;
+    min-height: 50px !important;
   }
 
   .chat-header .brand {
     font-size: 12px !important;
+  }
+  
+  .status-pill {
+    display: none !important;
   }
 
   .welcome-grid {
@@ -346,6 +384,14 @@ button { font-family: 'Nunito', sans-serif; }
     font-size: 13px !important;
     padding: 8px 10px !important;
   }
+  
+  .desktop-sidebar-toggle {
+    display: none !important;
+  }
+  
+  .mobile-menu-btn {
+    display: flex !important;
+  }
 }
 
 /* Extra Small Mobile - small phones */
@@ -361,5 +407,9 @@ button { font-family: 'Nunito', sans-serif; }
   .feature-card {
     padding: 9px 8px !important;
     font-size: 10px !important;
+  }
+  
+  .mobile-menu-btn {
+    display: flex !important;
   }
 }

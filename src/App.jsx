@@ -31,6 +31,12 @@ export default function App() {
     }
   }, [user, dispatch]);
 
+  // Apply theme on mount
+  useEffect(() => {
+    document.body.classList.toggle('light', !isDarkMode);
+    document.body.classList.toggle('dark', isDarkMode);
+  }, [isDarkMode]);
+
   const showToast = (msg) => setToast(msg);
 
   const handleNewChat = () => {
@@ -67,7 +73,7 @@ export default function App() {
         onNewChat={handleNewChat}
         onSelectConv={handleSelectConv}
         theme={isDarkMode ? 'dark' : 'light'}
-        onSetTheme={(mode) => toggleTheme(mode === 'light')}
+        onSetTheme={toggleTheme}
         mobileSidebarOpen={mobileSidebarOpen}
         onMobileClose={() => setMobileSidebarOpen(false)}
       />

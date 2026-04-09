@@ -1,15 +1,15 @@
 // ═══════════════════════════════════════
-// POAI – AuthContext
+// FSAI – AuthContext
 // SHA-256 hashing, sessionStorage for session, localStorage for accounts
 // ═══════════════════════════════════════
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
 const AuthContext = createContext(null);
 
-const SESSION_USER_KEY  = 'poai_session_user';
-const PERSISTENT_DB_KEY = 'poai_users_db_v1';
-const SESSION_DB_KEY    = 'poai_session_db';
-const LEGACY_LS_KEYS    = ['poai_user'];
+const SESSION_USER_KEY  = 'fsai_session_user';
+const PERSISTENT_DB_KEY = 'fsai_users_db_v2';
+const SESSION_DB_KEY    = 'fsai_session_db';
+const LEGACY_LS_KEYS    = ['fsai_user', 'fsai_users_db', 'poai_user'];
 
 function purgeLegacy() {
   try { LEGACY_LS_KEYS.forEach(k => localStorage.removeItem(k)); } catch {}
@@ -31,7 +31,7 @@ function stripHashes() {
 
 async function hashPassword(pw) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 function lsGet(k)    { try { const r = localStorage.getItem(k);   return r ? JSON.parse(r) : null; } catch { return null; } }
@@ -45,28 +45,22 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     purgeLegacy();
     stripHashes();
-    // IMPORTANT: Only initialize session DB if it doesn't exist yet this session.
-    // Never wipe it — doing so destroys in-session password hashes needed for login.
-    if (!ssGet(SESSION_DB_KEY)) {
-      ssSet(SESSION_DB_KEY, {});
-    }
+    ssSet(SESSION_DB_KEY, {});
   }, []);
 
   const signup = useCallback(async ({ name, email, password }) => {
     const sDb = ssGet(SESSION_DB_KEY) ?? {};
     const pDb = lsGet(PERSISTENT_DB_KEY) ?? {};
     const key = email.toLowerCase().trim();
-    if (pDb[key]) throw new Error('An account with this email already exists.');
+    if (sDb[key] || pDb[key]) throw new Error('An account with this email already exists.');
 
     const hash = await hashPassword(password);
     const id   = 'user_' + Date.now();
     const at   = new Date().toISOString();
 
     const safe = { id, name: name.trim(), email: key, avatar: name.trim()[0].toUpperCase(), createdAt: at };
-
     sDb[key] = { ...safe, _pwHash: hash };
     ssSet(SESSION_DB_KEY, sDb);
-
     pDb[key] = safe;
     lsSet(PERSISTENT_DB_KEY, pDb);
 
@@ -76,15 +70,14 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = useCallback(async ({ email, password }) => {
+    const sDb = ssGet(SESSION_DB_KEY) ?? {};
     const pDb = lsGet(PERSISTENT_DB_KEY) ?? {};
     const key = email.toLowerCase().trim();
     const pu  = pDb[key];
     if (!pu) throw new Error('No account found with this email.');
 
     const hash = await hashPassword(password);
-    const sDb  = ssGet(SESSION_DB_KEY) ?? {};
     let found  = sDb[key];
-
     if (!found) {
       found = { ...pu, _pwHash: hash };
       sDb[key] = found;

@@ -6,7 +6,6 @@ import ShareModal        from "./components/Modals/ShareModal";
 import Toast             from "./components/UI/Toast";
 import AmbientBackground from "./components/UI/AmbientBackground";
 import AuthPage          from "./components/AuthPage";
-import SharedView        from "./components/Sharedview";
 import {
   addConversation,
   setActiveConversation,
@@ -14,11 +13,6 @@ import {
 } from "./store/actions/chatActions";
 import { useAuth }  from "./context/AuthContext";
 import { useTheme } from "./context/ThemeContext";
-
-function isSharedLink() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("shared") === "true";
-}
 
 export default function App() {
   const dispatch = useDispatch();
@@ -28,7 +22,6 @@ export default function App() {
   const [toast, setToast]           = useState(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  // Reset Redux chat store whenever the logged-in user changes
   const prevUserIdRef = useRef(null);
   useEffect(() => {
     const uid = user?.id ?? "guest";
@@ -51,10 +44,6 @@ export default function App() {
     setMobileSidebarOpen(false);
   };
 
-  // Shared-link gate: show public view regardless of auth state
-  if (isSharedLink()) return <SharedView />;
-
-  // Auth gate: show login/signup if not logged in
   if (!user) return <AuthPage />;
 
   return (
@@ -64,7 +53,6 @@ export default function App() {
     }}>
       <AmbientBackground />
 
-      {/* Mobile overlay */}
       {mobileSidebarOpen && (
         <div
           onClick={() => setMobileSidebarOpen(false)}

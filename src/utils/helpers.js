@@ -28,36 +28,23 @@ export function copyToClipboard(text) {
 }
 
 /**
- * Stores the message content server-side via the dpaste.com API
- * and returns a clean short share URL pointing to the /share route.
+ * Encodes the message content as base64 directly in the share URL.
+ * No external API needed — works offline, no CORS issues, never fails.
  *
- * URL format: https://poultrybot.netlify.app/share?sid=<dpaste-id>
+ * URL format: https://poultrybot.netlify.app/share?msg=<base64>
  *
- * SharedView fetches the raw content from dpaste using the sid,
- * so the address bar stays clean regardless of message length.
+ * SharedView decodes the base64 from the URL param on load.
  *
  * @param {string} messageContent
- * @returns {Promise<string>} The short share URL
+ * @returns {Promise<string>} The share URL (resolves immediately)
  */
 export async function buildShareUrl(messageContent) {
-  const form = new FormData();
-  form.append("content", messageContent);
-  form.append("syntax",  "text");
-  form.append("expiry_days", "30");
-
-  const res = await fetch("https://dpaste.com/api/v2/", {
-    method: "POST",
-    body:   form,
-  });
-
-  if (!res.ok) throw new Error("Could not create share link. Please try again.");
-
-  // dpaste returns a URL like https://dpaste.com/XXXXXXXX
-  const pasteUrl = (await res.text()).trim();
-  // Extract just the ID part, e.g. "XXXXXXXX"
-  const sid = pasteUrl.replace(/https?:\/\/dpaste\.com\//, "").replace(/\/$/, "");
-
-  const base = window.location.origin;
-  // Use /share?sid=... so it renders as a proper shared view page
-  return `${base}/share?sid=${sid}`;
+  try {
+    // Encode content as base64 (handles unicode via encodeURIComponent)
+    const encoded = btoa(unescape(encodeURIComponent(messageContent)));
+    const base = window.location.origin;
+    return `${base}/share?msg=${encoded}`;
+  } catch (err) {
+    throw new Error("Could not create share link. The response may be too long.");
+  }
 }

@@ -1,12 +1,42 @@
 // ═══════════════════════════════════════
 // POAI – SharedView
-// Public read-only page. Overrides global overflow:hidden so the page scrolls.
+// Public read-only page. Decodes base64-encoded content from URL param.
+// Overrides global overflow:hidden so the page scrolls.
 // ═══════════════════════════════════════
 import React, { useEffect, useState } from "react";
 import { renderMarkdown } from "../utils/markdown";
 
 function clearSessionAuth() {
   try { sessionStorage.removeItem("poai_session_user"); } catch {}
+}
+
+/**
+ * Decode content from URL.
+ * Supports:
+ *   ?msg=BASE64   — new self-contained format (no external fetch needed)
+ *   ?sid=DPASTE   — old dpaste format (fetches from dpaste.com)
+ */
+function getContentFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+
+  // New format: base64 encoded content in ?msg=
+  const msg = params.get("msg");
+  if (msg) {
+    try {
+      const decoded = decodeURIComponent(escape(atob(msg)));
+      return { type: "inline", content: decoded };
+    } catch {
+      return { type: "error", error: "Could not decode this share link. It may be corrupted." };
+    }
+  }
+
+  // Old format: dpaste sid
+  const sid = params.get("sid");
+  if (sid) {
+    return { type: "dpaste", sid };
+  }
+
+  return { type: "error", error: "No content found in this share link." };
 }
 
 export default function SharedView() {
@@ -16,40 +46,42 @@ export default function SharedView() {
   const [copied,    setCopied]    = useState(false);
   const [urlCopied, setUrlCopied] = useState(false);
 
+  // ── Override global overflow:hidden so this page can scroll ──
   useEffect(() => {
-    // ── Override global.css which sets html,body,#root to overflow:hidden ──
     const els = [document.documentElement, document.body];
     const originals = els.map(el => el.style.overflow);
     els.forEach(el => { el.style.overflow = "auto"; });
     const root = document.getElementById("root");
     let rootOrig = "";
     if (root) { rootOrig = root.style.overflow; root.style.overflow = "auto"; }
-
     return () => {
       els.forEach((el, i) => { el.style.overflow = originals[i]; });
       if (root) root.style.overflow = rootOrig;
     };
   }, []);
 
+  // ── Load content from URL ──
   useEffect(() => {
     clearSessionAuth();
+    const parsed = getContentFromUrl();
 
-    const params = new URLSearchParams(window.location.search);
-    const sid    = params.get("sid");
-
-    if (!sid) {
-      setError("No share ID found in this link.");
+    if (parsed.type === "inline") {
+      // New format: content is already decoded, no fetch needed
+      setContent(parsed.content);
       setLoading(false);
-      return;
+    } else if (parsed.type === "dpaste") {
+      // Old format: fetch from dpaste
+      fetch(`https://dpaste.com/${parsed.sid}.txt`)
+        .then((res) => {
+          if (!res.ok) throw new Error("Share link not found or has expired.");
+          return res.text();
+        })
+        .then((text) => { setContent(text.trim()); setLoading(false); })
+        .catch((err)  => { setError(err.message);  setLoading(false); });
+    } else {
+      setError(parsed.error);
+      setLoading(false);
     }
-
-    fetch(`https://dpaste.com/${sid}.txt`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Share link not found or has expired.");
-        return res.text();
-      })
-      .then((text) => { setContent(text.trim()); setLoading(false); })
-      .catch((err)  => { setError(err.message);  setLoading(false); });
   }, []);
 
   const handleCopyContent = () => {
@@ -89,7 +121,7 @@ export default function SharedView() {
       position: "relative",
     }}>
 
-      {/* Botanicals — fixed so they don't affect page height */}
+      {/* Botanicals */}
       {[
         { icon:"🌾", size:30, top:"8%",  right:"4%",  opacity:0.07, dur:4, delay:0   },
         { icon:"🍃", size:22, top:"55%", right:"2.5%",opacity:0.05, dur:6, delay:1.5 },
@@ -116,7 +148,6 @@ export default function SharedView() {
         .sv-btn-primary:hover { transform:translateY(-2px) !important; box-shadow:0 8px 28px rgba(0,0,0,.35) !important; }
         .sv-btn-ghost:hover   { background:rgba(138,161,118,.2) !important; color:#b0c49c !important; }
         .sv-btn-muted:hover   { background:rgba(255,255,255,.1) !important; }
-        /* ── Markdown ── */
         .sv-content .md-p   { margin-bottom:8px; line-height:1.75; }
         .sv-content .md-h1  { color:#b0c49c; font-size:18px; margin:14px 0 6px; font-family:'Playfair Display',serif; font-weight:700; }
         .sv-content .md-h2  { color:#8aa176; font-size:16px; margin:12px 0 5px; font-family:'Playfair Display',serif; font-weight:700; }
@@ -138,26 +169,13 @@ export default function SharedView() {
         .sv-content .md-hr { border:none; border-top:1px solid rgba(138,161,118,.18); margin:14px 0; }
         .sv-content strong  { color:#e7e7d1; font-weight:700; }
         .sv-content em      { color:rgba(231,231,212,.7); font-style:italic; }
-        /* ── Share URL box ── */
-        .sv-url-box {
-          background:rgba(255,255,255,.04);
-          border:1px solid rgba(138,161,118,.2);
-          borderRadius:10px;
-          padding:10px 16px;
-          margin-bottom:20px;
-          display:flex;
-          align-items:center;
-          gap:10px;
-          flex-wrap:wrap;
-        }
-        /* ── Responsive ── */
         @media (max-width: 600px) {
           .sv-header { flex-direction: column !important; align-items: flex-start !important; }
           .sv-header-btns { width: 100%; justify-content: flex-end; }
         }
       `}</style>
 
-      {/* ── Header ─────────────────────────────────────────────────── */}
+      {/* ── Header ── */}
       <div className="sv-header" style={{
         width:"100%", maxWidth:760,
         display:"flex", alignItems:"center", justifyContent:"space-between",
@@ -192,7 +210,7 @@ export default function SharedView() {
         </div>
       </div>
 
-      {/* ── Card ───────────────────────────────────────────────────── */}
+      {/* ── Card ── */}
       <div style={{
         width:"100%", maxWidth:760,
         background:"rgba(24,34,23,0.96)",
@@ -240,18 +258,12 @@ export default function SharedView() {
 
         {/* Share URL box — shown after content loads */}
         {!loading && !error && content && (
-          <div style={{
-            padding:"14px 24px 0",
-          }}>
+          <div style={{ padding:"14px 24px 0" }}>
             <div style={{
               background:"rgba(255,255,255,.04)",
               border:"1px solid rgba(138,161,118,.2)",
-              borderRadius:10,
-              padding:"10px 16px",
-              display:"flex",
-              alignItems:"center",
-              gap:10,
-              flexWrap:"wrap",
+              borderRadius:10, padding:"10px 16px",
+              display:"flex", alignItems:"center", gap:10, flexWrap:"wrap",
             }}>
               <span style={{
                 fontSize:11, color:"rgba(231,231,212,.4)",
@@ -260,8 +272,7 @@ export default function SharedView() {
               }}>Share URL</span>
               <span style={{
                 flex:1, fontSize:12, color:"#8aa176",
-                fontFamily:"monospace", wordBreak:"break-all",
-                minWidth:0,
+                fontFamily:"monospace", wordBreak:"break-all", minWidth:0,
               }}>
                 {window.location.href}
               </span>
@@ -275,8 +286,7 @@ export default function SharedView() {
                   borderRadius:8, padding:"6px 14px",
                   color:"#fff", cursor:"pointer",
                   fontFamily:"'Nunito',sans-serif", fontWeight:700, fontSize:12,
-                  transition:"all .2s", flexShrink:0,
-                  whiteSpace:"nowrap",
+                  transition:"all .2s", flexShrink:0, whiteSpace:"nowrap",
                 }}
               >
                 {urlCopied ? "✓ Copied!" : "Copy link"}

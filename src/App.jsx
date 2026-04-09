@@ -17,14 +17,18 @@ import { useTheme } from "./context/ThemeContext";
 
 /**
  * Returns true when the current URL is a share link.
- * Supports both:
- *   /share?sid=XXX          ← new clean format (Image 2)
- *   /?shared=true&sid=XXX   ← old format (backward compat)
+ * Supports:
+ *   /share?msg=BASE64     ← new self-contained format
+ *   /?shared=true&sid=XX  ← old dpaste format (backward compat)
  */
 function isSharedLink() {
   const path   = window.location.pathname;
   const params = new URLSearchParams(window.location.search);
-  return path === "/share" || params.get("shared") === "true";
+  return (
+    path === "/share" ||
+    params.has("msg") ||
+    params.get("shared") === "true"
+  );
 }
 
 export default function App() {

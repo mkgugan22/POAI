@@ -1,0 +1,123 @@
+// ═══════════════════════════════════════
+// POAI – AuthContext
+// SHA-256 hashing, sessionStorage for session, localStorage for accounts
+// ═══════════════════════════════════════
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+
+const AuthContext = createContext(null);
+
+const SESSION_USER_KEY  = 'poai_session_user';
+const PERSISTENT_DB_KEY = 'poai_users_db_v1';
+const SESSION_DB_KEY    = 'poai_session_db';
+const LEGACY_LS_KEYS    = ['poai_user'];
+
+function purgeLegacy() {
+  try { LEGACY_LS_KEYS.forEach(k => localStorage.removeItem(k)); } catch {}
+}
+
+function stripHashes() {
+  try {
+    const db = lsGet(PERSISTENT_DB_KEY);
+    if (!db) return;
+    let changed = false;
+    const clean = {};
+    for (const [k, u] of Object.entries(db)) {
+      if (u && '_pwHash' in u) { const { _pwHash, ...rest } = u; clean[k] = rest; changed = true; }
+      else clean[k] = u;
+    }
+    if (changed) lsSet(PERSISTENT_DB_KEY, clean);
+  } catch {}
+}
+
+async function hashPassword(pw) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function lsGet(k)    { try { const r = localStorage.getItem(k);   return r ? JSON.parse(r) : null; } catch { return null; } }
+function lsSet(k, v) { try { v != null ? localStorage.setItem(k, JSON.stringify(v)) : localStorage.removeItem(k); } catch {} }
+function ssGet(k)    { try { const r = sessionStorage.getItem(k); return r ? JSON.parse(r) : null; } catch { return null; } }
+function ssSet(k, v) { try { v != null ? sessionStorage.setItem(k, JSON.stringify(v)) : sessionStorage.removeItem(k); } catch {} }
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(() => ssGet(SESSION_USER_KEY));
+
+  useEffect(() => {
+    purgeLegacy();
+    stripHashes();
+    // Only initialize session DB if it doesn't already exist this session
+    // Do NOT wipe it — that breaks in-session login after signup
+    if (!ssGet(SESSION_DB_KEY)) {
+      ssSet(SESSION_DB_KEY, {});
+    }
+  }, []);
+
+  const signup = useCallback(async ({ name, email, password }) => {
+    const sDb = ssGet(SESSION_DB_KEY) ?? {};
+    const pDb = lsGet(PERSISTENT_DB_KEY) ?? {};
+    const key = email.toLowerCase().trim();
+    if (pDb[key]) throw new Error('An account with this email already exists.');
+
+    const hash = await hashPassword(password);
+    const id   = 'user_' + Date.now();
+    const at   = new Date().toISOString();
+
+    const safe = { id, name: name.trim(), email: key, avatar: name.trim()[0].toUpperCase(), createdAt: at };
+
+    // Store hash in session DB for this-session login verification
+    sDb[key] = { ...safe, _pwHash: hash };
+    ssSet(SESSION_DB_KEY, sDb);
+
+    // Store safe profile (no hash) in persistent localStorage
+    pDb[key] = safe;
+    lsSet(PERSISTENT_DB_KEY, pDb);
+
+    setUser(safe);
+    ssSet(SESSION_USER_KEY, safe);
+    return safe;
+  }, []);
+
+  const login = useCallback(async ({ email, password }) => {
+    const pDb = lsGet(PERSISTENT_DB_KEY) ?? {};
+    const key = email.toLowerCase().trim();
+    const pu  = pDb[key];
+    if (!pu) throw new Error('No account found with this email.');
+
+    const hash = await hashPassword(password);
+
+    // Get or rebuild session DB entry with hash for verification
+    const sDb  = ssGet(SESSION_DB_KEY) ?? {};
+    let found  = sDb[key];
+
+    if (!found) {
+      // First login this session — store hash for future verifications
+      found = { ...pu, _pwHash: hash };
+      sDb[key] = found;
+      ssSet(SESSION_DB_KEY, sDb);
+    } else if (found._pwHash !== hash) {
+      throw new Error('Incorrect password. Please try again.');
+    }
+
+    const { _pwHash, ...safe } = found;
+    setUser(safe);
+    ssSet(SESSION_USER_KEY, safe);
+    return safe;
+  }, []);
+
+  const logout = useCallback(() => {
+    setUser(null);
+    ssSet(SESSION_USER_KEY, null);
+  }, []);
+
+  return (
+    <AuthContext.Provider value={{ user, login, signup, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
+}

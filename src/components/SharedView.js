@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { copyToClipboard, readShareMessage } from "../utils/helpers";
+import { buildShareUrl, copyToClipboard, readShareMessage } from "../utils/helpers";
 
 export default function SharedView({ message, sid }) {
   const [shareUrl, setShareUrl] = useState("");
@@ -29,17 +29,8 @@ export default function SharedView({ message, sid }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const url = new URL(window.location.href);
-    const hasMsg = url.searchParams.has("msg");
-    const hasSid = url.searchParams.has("sid");
-    const shouldUpdate = Boolean(visibleMessage) && (!hasMsg || (sid && !hasSid));
-
-    if (shouldUpdate) {
-      url.searchParams.set("msg", visibleMessage);
-      if (sid) {
-        url.searchParams.set("sid", sid);
-      }
-      setShareUrl(url.toString());
+    if (visibleMessage) {
+      setShareUrl(buildShareUrl(visibleMessage, sid));
     } else {
       setShareUrl(window.location.href);
     }

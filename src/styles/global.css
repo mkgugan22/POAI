@@ -10,6 +10,11 @@ html, body, #root {
   overflow: hidden;
 }
 
+body.share-page,
+#root.share-page {
+  overflow: auto;
+}
+
 :root {
   color-scheme: dark;
   --bg: #121912;

@@ -88,7 +88,8 @@ export function readShareMessage(sid) {
 }
 
 export function buildShareUrl(messageContent) {
-  const encodedMessage = encodeURIComponent(messageContent);
   const origin = typeof window !== "undefined" ? window.location.origin : "https://poultry-expert.app";
-  return `${origin}/share?msg=${encodedMessage}&utm_source=chat`;
+  const sid = generateId("share");
+  saveShareMessage(sid, messageContent);
+  return `${origin}/share?sid=${sid}&utm_source=chat`;
 }

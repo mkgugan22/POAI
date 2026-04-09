@@ -56,13 +56,16 @@ export default function App() {
 
     setSharedMessage(rawMessage ? safeDecode(rawMessage) : null);
     setSharedSid(sid);
-    setIsSharedRoute(
-      url.pathname.startsWith("/share") ||
-      sharedFlag ||
-      Boolean(rawMessage) ||
-      Boolean(sid)
-    );
+    setIsSharedRoute(url.pathname.startsWith("/share") || sharedFlag);
   }, []);
+
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.body.classList.toggle("share-page", isSharedRoute);
+      const root = document.getElementById("root");
+      if (root) root.classList.toggle("share-page", isSharedRoute);
+    }
+  }, [isSharedRoute]);
 
   // Apply theme on mount
   useEffect(() => {

@@ -32,12 +32,6 @@ export default function SharedView({ message, sid }) {
     return `${text.slice(0, slice)}...${text.slice(text.length - slice)}`;
   };
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setShareUrl(window.location.href);
-    }
-  }, []);
-
   const handleCopyLink = async () => {
     if (!shareUrl) return;
     await copyToClipboard(shareUrl);
@@ -55,17 +49,18 @@ export default function SharedView({ message, sid }) {
   return (
     <div style={{
       minHeight: "100vh",
+      width: "100%",
       display: "flex",
-      alignItems: "center",
+      alignItems: "flex-start",
       justifyContent: "center",
       background: "var(--bg)",
       color: "var(--text)",
-      padding: 20,
+      padding: "40px 16px 60px",
       fontFamily: "'Nunito', sans-serif",
     }}>
       <div style={{
         width: "100%",
-        maxWidth: 780,
+        maxWidth: 980,
         borderRadius: 30,
         background: "var(--surface)",
         border: "1px solid var(--border)",
@@ -74,11 +69,10 @@ export default function SharedView({ message, sid }) {
       }}>
         <div style={{
           background: "linear-gradient(180deg, rgba(138,161,118,0.14), transparent)",
-          padding: "28px 26px 20px",
+          padding: "28px 22px 20px",
           display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 16,
+          flexDirection: "column",
+          gap: 14,
         }}>
           <div>
             <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: 0.3 }}>
@@ -89,23 +83,27 @@ export default function SharedView({ message, sid }) {
             </div>
           </div>
 
-          <a
-            href={sid ? `/?sid=${sid}` : "/"}
-            style={{
-              padding: "12px 20px",
-              borderRadius: 14,
-              background: "var(--surface-strong)",
-              border: "1px solid var(--border)",
-              color: "var(--text)",
-              textDecoration: "none",
-              fontWeight: 700,
-            }}
-          >
-            Open App
-          </a>
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <a
+              href="/"
+              style={{
+                padding: "12px 20px",
+                borderRadius: 14,
+                background: "var(--surface-strong)",
+                border: "1px solid var(--border)",
+                color: "var(--text)",
+                textDecoration: "none",
+                fontWeight: 700,
+                minWidth: 110,
+                textAlign: "center",
+              }}
+            >
+              Open App
+            </a>
+          </div>
         </div>
 
-        <div style={{ padding: "24px 26px 28px" }}>
+        <div style={{ padding: "24px 22px 28px" }}>
           <div style={{
             marginBottom: 18,
             display: "flex",
@@ -132,8 +130,9 @@ export default function SharedView({ message, sid }) {
                 fontFamily: "monospace",
                 fontSize: 13,
                 lineHeight: 1.5,
-                wordBreak: "break-word",
+                wordBreak: "break-all",
                 overflowWrap: "anywhere",
+                width: "100%",
               }}>
                 {shareActive ? (
                   <a
@@ -144,6 +143,8 @@ export default function SharedView({ message, sid }) {
                     style={{
                       color: "var(--accent)",
                       textDecoration: "none",
+                      display: "block",
+                      width: "100%",
                     }}
                   >
                     {truncateMiddle(shareUrl)}
@@ -239,7 +240,7 @@ export default function SharedView({ message, sid }) {
               Sign in or create a free account to ask your own poultry questions.
             </div>
             <a
-              href={sid ? `/?sid=${sid}` : "/"}
+              href="/"
               style={{
                 padding: "14px 22px",
                 borderRadius: 16,

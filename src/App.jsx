@@ -25,6 +25,7 @@ export default function App() {
   const [toast, setToast]           = useState(null);
   const [isMobileView, setIsMobileView] = useState(false);
   const [sharedMessage, setSharedMessage] = useState(null);
+  const [sharedSid, setSharedSid] = useState(null);
   const [isSharedRoute, setIsSharedRoute] = useState(false);
 
   const prevUserIdRef = useRef(null);
@@ -49,9 +50,16 @@ export default function App() {
     const params = url.searchParams;
     const rawMessage = params.get("msg");
     const sharedFlag = params.get("shared") === "true";
+    const sid = params.get("sid");
 
     setSharedMessage(rawMessage ? decodeURIComponent(rawMessage) : null);
-    setIsSharedRoute(url.pathname.startsWith("/share") || sharedFlag);
+    setSharedSid(sid);
+    setIsSharedRoute(
+      url.pathname.startsWith("/share") ||
+      sharedFlag ||
+      Boolean(rawMessage) ||
+      Boolean(sid)
+    );
   }, []);
 
   // Apply theme on mount
@@ -74,7 +82,7 @@ export default function App() {
   };
 
   if (isSharedRoute) {
-    return <SharedView message={sharedMessage} />;
+    return <SharedView message={sharedMessage} sid={sharedSid} />;
   }
 
   if (!user) return <AuthPage />;

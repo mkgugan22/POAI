@@ -1,7 +1,34 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { copyToClipboard } from "../utils/helpers";
+import { CopyIcon } from "./UI/Icons";
 
-export default function SharedView({ message }) {
+export default function SharedView({ message, sid }) {
+  const [shareUrl, setShareUrl] = useState("");
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedText, setCopiedText] = useState(false);
   const hasMessage = Boolean(message);
+  const shareActive = Boolean(shareUrl);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setShareUrl(window.location.href);
+    }
+  }, []);
+
+  const handleCopyLink = async () => {
+    if (!shareUrl) return;
+    await copyToClipboard(shareUrl);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2200);
+  };
+
+  const handleCopyText = async () => {
+    if (!message) return;
+    await copyToClipboard(message);
+    setCopiedText(true);
+    setTimeout(() => setCopiedText(false), 2200);
+  };
+
   return (
     <div style={{
       minHeight: "100vh",
@@ -15,107 +42,176 @@ export default function SharedView({ message }) {
     }}>
       <div style={{
         width: "100%",
-        maxWidth: 760,
-        borderRadius: 28,
-        background: "rgba(24,34,23,0.96)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        boxShadow: "0 30px 90px rgba(0,0,0,0.35)",
-        padding: "28px 24px",
+        maxWidth: 780,
+        borderRadius: 30,
+        background: "var(--surface)",
+        border: "1px solid var(--border)",
+        boxShadow: "0 28px 80px rgba(0,0,0,0.32)",
+        overflow: "hidden",
       }}>
         <div style={{
+          background: "linear-gradient(180deg, rgba(138,161,118,0.14), transparent)",
+          padding: "28px 26px 20px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           gap: 16,
-          marginBottom: 22,
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div style={{
-              width: 46,
-              height: 46,
-              borderRadius: 16,
-              display: "grid",
-              placeItems: "center",
-              background: "rgba(138,161,118,0.16)",
-              color: "var(--accent-strong)",
-              fontSize: 24,
-            }}>
-              🐔
+          <div>
+            <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: 0.3 }}>
+              Poultry Expert AI
             </div>
-            <div>
-              <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: 0.2 }}>
-                Poultry Expert
-              </div>
-              <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
-                Shared response
-              </div>
+            <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
+              Shared response
             </div>
           </div>
 
           <a
             href="/"
             style={{
-              padding: "12px 18px",
+              padding: "12px 20px",
               borderRadius: 14,
+              background: "var(--surface-strong)",
               border: "1px solid var(--border)",
-              background: "var(--surface)",
               color: "var(--text)",
               textDecoration: "none",
               fontWeight: 700,
-              transition: "all 0.2s",
             }}
           >
             Open App
           </a>
         </div>
 
-        <div style={{
-          borderRadius: 24,
-          overflow: "hidden",
-          border: "1px solid rgba(255,255,255,0.08)",
-          background: "rgba(255,255,255,0.04)",
-          padding: 24,
-          minHeight: 200,
-          maxHeight: 420,
-          overflowY: "auto",
-          lineHeight: 1.72,
-          whiteSpace: "pre-wrap",
-          fontSize: 15,
-          color: "var(--text)",
-        }}>
-          {hasMessage ? (
-            message
-          ) : (
-            <div style={{ color: "var(--muted)", lineHeight: 1.6 }}>
-              This shared response is not available. The link may be missing content or has expired.
+        <div style={{ padding: "24px 26px 28px" }}>
+          <div style={{
+            marginBottom: 18,
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+          }}>
+            <div style={{ fontSize: 14, color: "var(--muted)", fontWeight: 700 }}>
+              Share URL
+            </div>
+            <div style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 10,
+              alignItems: "stretch",
+            }}>
+              <div style={{
+                flex: 1,
+                minWidth: 0,
+                background: "var(--surface-soft)",
+                border: "1px solid var(--border)",
+                borderRadius: 16,
+                padding: "14px 16px",
+                color: "var(--accent)",
+                fontFamily: "monospace",
+                fontSize: 13,
+                lineHeight: 1.5,
+                wordBreak: "break-word",
+                overflowWrap: "anywhere",
+              }}>
+                {shareActive ? shareUrl : "Loading URL..."}
+              </div>
+
+              <button
+                onClick={handleCopyLink}
+                disabled={!shareActive}
+                style={{
+                  flexShrink: 0,
+                  borderRadius: 14,
+                  background: copiedLink ? "linear-gradient(135deg, rgba(138,161,118,1), rgba(103,123,92,1))" : "var(--surface-soft)",
+                  border: "1px solid var(--border)",
+                  color: copiedLink ? "#fff" : "var(--text)",
+                  fontWeight: 700,
+                  padding: "14px 18px",
+                  cursor: shareActive ? "pointer" : "not-allowed",
+                }}
+              >
+                {copiedLink ? "Link copied" : "Copy link"}
+              </button>
+            </div>
+          </div>
+
+          <div style={{
+            marginBottom: 22,
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+          }}>
+            <div style={{ fontSize: 14, color: "var(--muted)", fontWeight: 700 }}>
+              Response preview
+            </div>
+            <div style={{
+              borderRadius: 22,
+              background: "var(--surface-strong)",
+              border: "1px solid var(--border)",
+              padding: 22,
+              minHeight: 180,
+              maxHeight: 380,
+              overflowY: "auto",
+              whiteSpace: "pre-wrap",
+              lineHeight: 1.8,
+              color: "var(--text)",
+            }}>
+              {hasMessage ? (
+                message
+              ) : sid ? (
+                "This shared link is valid. Open the app to view the full response."
+              ) : (
+                "This shared response is not available. The link may be missing content or has expired."
+              )}
+            </div>
+          </div>
+
+          {hasMessage && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+              <button
+                onClick={handleCopyText}
+                style={{
+                  borderRadius: 14,
+                  background: copiedText ? "linear-gradient(135deg, rgba(138,161,118,1), rgba(103,123,92,1))" : "var(--surface-soft)",
+                  border: "1px solid var(--border)",
+                  color: copiedText ? "#fff" : "var(--text)",
+                  fontWeight: 700,
+                  padding: "14px 18px",
+                  cursor: "pointer",
+                }}
+              >
+                {copiedText ? "Copied" : "Copy text"}
+              </button>
+              <div style={{ color: "var(--muted)", fontSize: 13, alignSelf: "center" }}>
+                Share this response with other farmers.
+              </div>
             </div>
           )}
-        </div>
 
-        <div style={{
-          marginTop: 18,
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 12,
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}>
-          <div style={{ color: "var(--muted)", fontSize: 13 }}>
-            Sign in or create a free account to ask your own questions.
+          <div style={{
+            marginTop: 26,
+            display: "flex",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 12,
+            alignItems: "center",
+          }}>
+            <div style={{ color: "var(--muted)", fontSize: 13 }}>
+              Sign in or create a free account to ask your own poultry questions.
+            </div>
+            <a
+              href="/"
+              style={{
+                padding: "14px 22px",
+                borderRadius: 16,
+                background: "linear-gradient(135deg, rgba(138,161,118,1), rgba(103,123,92,1))",
+                color: "#fff",
+                fontWeight: 700,
+                textDecoration: "none",
+              }}
+            >
+              Continue to App
+            </a>
           </div>
-          <a
-            href="/"
-            style={{
-              padding: "12px 18px",
-              borderRadius: 14,
-              background: "linear-gradient(135deg, rgba(138,161,118,1), rgba(103,123,92,1))",
-              color: "#fff",
-              fontWeight: 700,
-              textDecoration: "none",
-            }}
-          >
-            Continue to App
-          </a>
         </div>
       </div>
     </div>

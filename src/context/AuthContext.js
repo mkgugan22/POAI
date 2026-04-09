@@ -45,8 +45,8 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     purgeLegacy();
     stripHashes();
-    // Only initialize session DB if it doesn't already exist this session
-    // Do NOT wipe it — that breaks in-session login after signup
+    // IMPORTANT: Only initialize session DB if it doesn't exist yet this session.
+    // Never wipe it — doing so destroys in-session password hashes needed for login.
     if (!ssGet(SESSION_DB_KEY)) {
       ssSet(SESSION_DB_KEY, {});
     }
@@ -64,11 +64,9 @@ export function AuthProvider({ children }) {
 
     const safe = { id, name: name.trim(), email: key, avatar: name.trim()[0].toUpperCase(), createdAt: at };
 
-    // Store hash in session DB for this-session login verification
     sDb[key] = { ...safe, _pwHash: hash };
     ssSet(SESSION_DB_KEY, sDb);
 
-    // Store safe profile (no hash) in persistent localStorage
     pDb[key] = safe;
     lsSet(PERSISTENT_DB_KEY, pDb);
 
@@ -84,13 +82,10 @@ export function AuthProvider({ children }) {
     if (!pu) throw new Error('No account found with this email.');
 
     const hash = await hashPassword(password);
-
-    // Get or rebuild session DB entry with hash for verification
     const sDb  = ssGet(SESSION_DB_KEY) ?? {};
     let found  = sDb[key];
 
     if (!found) {
-      // First login this session — store hash for future verifications
       found = { ...pu, _pwHash: hash };
       sDb[key] = found;
       ssSet(SESSION_DB_KEY, sDb);

@@ -13,8 +13,27 @@ import {
   resetForUser,
   setSidebarOpen,
 } from "./store/actions/chatActions";
+import { decodeShareMsg } from "./utils/helpers";
 import { useAuth }  from "./context/AuthContext";
 import { useTheme } from "./context/ThemeContext";
+
+/**
+ * Detect share link and decode message once on app load.
+ * Runs synchronously before first render — safe as a module-level call
+ * because window is available in the browser at this point.
+ */
+function getSharedInfo() {
+  const path     = window.location.pathname;
+  const params   = new URLSearchParams(window.location.search);
+  const msgParam = params.get("msg");
+  const isShare  = path === "/share" || params.get("shared") === "true" || Boolean(msgParam);
+  if (!isShare) return { isShared: false, message: null };
+  const message = msgParam ? decodeShareMsg(msgParam) : null;
+  return { isShared: true, message };
+}
+
+// Compute once at module load time (stable across re-renders)
+const sharedInfo = getSharedInfo();
 
 export default function App() {
   const dispatch = useDispatch();
@@ -23,22 +42,8 @@ export default function App() {
   const sidebarOpen                 = useSelector((s) => s.chat.sidebarOpen);
   const [shareMsg, setShareMsg]     = useState(null);
   const [toast, setToast]           = useState(null);
-  const [isMobileView, setIsMobileView] = useState(false);
-  const [sharedMessage, setSharedMessage] = useState(null);
-  const [sharedSid, setSharedSid] = useState(null);
-  const [isSharedRoute, setIsSharedRoute] = useState(false);
 
   const prevUserIdRef = useRef(null);
-
-  const safeDecode = (value) => {
-    if (!value) return null;
-    try {
-      return decodeURIComponent(value.replace(/\+/g, " "));
-    } catch {
-      return value;
-    }
-  };
-
   useEffect(() => {
     const uid = user?.id ?? "guest";
     if (uid !== prevUserIdRef.current) {
@@ -47,31 +52,23 @@ export default function App() {
     }
   }, [user, dispatch]);
 
+  // Apply theme body classes
   useEffect(() => {
-    const url = new URL(window.location.href);
-    const params = url.searchParams;
-    const rawMessage = params.get("msg");
-    const sharedFlag = params.get("shared") === "true";
-    const sid = params.get("sid");
-
-    setSharedMessage(rawMessage ? safeDecode(rawMessage) : null);
-    setSharedSid(sid);
-    setIsSharedRoute(url.pathname.startsWith("/share") || sharedFlag);
-  }, []);
-
-  useEffect(() => {
-    if (typeof document !== "undefined") {
-      document.body.classList.toggle("share-page", isSharedRoute);
-      const root = document.getElementById("root");
-      if (root) root.classList.toggle("share-page", isSharedRoute);
-    }
-  }, [isSharedRoute]);
-
-  // Apply theme on mount
-  useEffect(() => {
-    document.body.classList.toggle('light', !isDarkMode);
-    document.body.classList.toggle('dark', isDarkMode);
+    document.body.classList.toggle("light", !isDarkMode);
+    document.body.classList.toggle("dark",  isDarkMode);
   }, [isDarkMode]);
+
+  // Let the share page scroll (global.css sets overflow:hidden by default)
+  useEffect(() => {
+    if (!sharedInfo.isShared) return;
+    document.body.classList.add("share-page");
+    const root = document.getElementById("root");
+    if (root) root.classList.add("share-page");
+    return () => {
+      document.body.classList.remove("share-page");
+      if (root) root.classList.remove("share-page");
+    };
+  }, []);
 
   const showToast = (msg) => setToast(msg);
 
@@ -86,20 +83,19 @@ export default function App() {
     dispatch(setSidebarOpen(false));
   };
 
-  if (isSharedRoute) {
+  // ── Shared-link gate — shown to anyone, no login required ─────────────
+  if (sharedInfo.isShared) {
     return (
       <div style={{
-        minHeight: "100vh",
-        width: "100%",
-        background: "var(--bg)",
-        overflowY: "auto",
-        position: "relative",
+        minHeight: "100vh", width: "100%",
+        background: "var(--bg)", overflowY: "auto",
       }}>
-        <SharedView message={sharedMessage} sid={sharedSid} />
+        <SharedView message={sharedInfo.message} />
       </div>
     );
   }
 
+  // ── Auth gate ──────────────────────────────────────────────────────────
   if (!user) return <AuthPage />;
 
   return (
@@ -109,7 +105,8 @@ export default function App() {
     }}>
       <AmbientBackground />
 
-      {sidebarOpen && isMobileView && (
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
         <div
           onClick={() => dispatch(setSidebarOpen(false))}
           style={{
@@ -122,7 +119,7 @@ export default function App() {
       <Sidebar
         onNewChat={handleNewChat}
         onSelectConv={handleSelectConv}
-        theme={isDarkMode ? 'dark' : 'light'}
+        theme={isDarkMode ? "dark" : "light"}
         onSetTheme={toggleTheme}
       />
 

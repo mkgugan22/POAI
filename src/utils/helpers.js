@@ -52,7 +52,6 @@ export function copyToClipboard(text) {
     document.body.appendChild(textarea);
     textarea.focus();
     textarea.select();
-
     try {
       const successful = document.execCommand("copy");
       document.body.removeChild(textarea);
@@ -64,33 +63,48 @@ export function copyToClipboard(text) {
   });
 }
 
-function storageKeyForShare(sid) {
-  return `poultry-share-${sid}`;
-}
-
-function saveShareMessage(sid, messageContent) {
-  if (typeof localStorage === "undefined") return;
+/**
+ * Encode message content as base64 and return a clean /share?msg= URL.
+ * No external API — works offline, never fails, no CORS issues.
+ *
+ * URL format: https://poultrybot.netlify.app/share?msg=<base64>
+ *
+ * @param {string} messageContent
+ * @returns {string} The share URL (synchronous — no async needed)
+ */
+export function buildShareUrl(messageContent) {
+  const origin = typeof window !== "undefined"
+    ? window.location.origin
+    : "https://poultrybot.netlify.app";
   try {
-    localStorage.setItem(storageKeyForShare(sid), JSON.stringify({ messageContent, createdAt: Date.now() }));
+    const encoded = btoa(unescape(encodeURIComponent(messageContent)));
+    return `${origin}/share?msg=${encoded}`;
   } catch {
-    // ignore storage failures
+    // Fallback: truncate content to avoid very large URLs
+    const safe = messageContent.slice(0, 2000);
+    const encoded = btoa(unescape(encodeURIComponent(safe)));
+    return `${origin}/share?msg=${encoded}`;
   }
 }
 
-export function readShareMessage(sid) {
-  if (typeof localStorage === "undefined") return null;
+/**
+ * Decode a share URL's base64 msg param back to the original message.
+ * Returns null if decoding fails.
+ *
+ * @param {string} encoded  — the raw base64 string from the URL
+ * @returns {string|null}
+ */
+export function decodeShareMsg(encoded) {
+  if (!encoded) return null;
   try {
-    const raw = localStorage.getItem(storageKeyForShare(sid));
-    return raw ? JSON.parse(raw).messageContent : null;
+    return decodeURIComponent(escape(atob(encoded)));
   } catch {
     return null;
   }
 }
 
-export function buildShareUrl(messageContent, existingSid = null) {
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://poultry-expert.app";
-  const sid = existingSid || generateId("share");
-  saveShareMessage(sid, messageContent);
-  const encodedMessage = encodeURIComponent(messageContent);
-  return `${origin}/share?msg=${encodedMessage}&sid=${sid}&utm_source=chat`;
-}
+/**
+ * Legacy helpers kept for backward compatibility with old code that
+ * passed existingSid. These are no-ops now since we use base64 URLs.
+ */
+export function readShareMessage() { return null; }

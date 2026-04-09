@@ -1,96 +1,63 @@
-/**
- * Generate a unique ID string with an optional prefix.
- */
 export function generateId(prefix = "id") {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 }
 
-/**
- * Truncate text to a given character limit, appending "…" if cut.
- */
 export function truncate(text, limit = 40) {
   if (!text) return "";
   return text.length > limit ? text.slice(0, limit) + "…" : text;
 }
 
-/**
- * Format a timestamp (ms) to a human-readable HH:MM time string.
- */
 export function formatTime(timestamp) {
   return new Date(timestamp).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
+    hour: "2-digit", minute: "2-digit",
   });
 }
 
-/**
- * Download plain-text content as a .txt file.
- */
 export function downloadAsText(content, filename = "response.txt") {
-  const blob = new Blob([content], { type: "text/plain" });
-  const url = URL.createObjectURL(blob);
+  const blob   = new Blob([content], { type: "text/plain" });
+  const url    = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
-  anchor.href = url;
+  anchor.href     = url;
   anchor.download = filename;
   anchor.click();
   URL.revokeObjectURL(url);
 }
 
-/**
- * Copy text to clipboard and return a promise that resolves on success.
- */
 export function copyToClipboard(text) {
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    return navigator.clipboard.writeText(text);
-  }
+  return navigator.clipboard.writeText(text);
+}
 
-  return new Promise((resolve, reject) => {
-    const textarea = document.createElement("textarea");
-    textarea.value = text;
-    textarea.style.position = "fixed";
-    textarea.style.left = "-9999px";
-    document.body.appendChild(textarea);
-    textarea.focus();
-    textarea.select();
+/**
+ * Stores the message content server-side via the dpaste.com API
+ * and returns a clean short share URL pointing to the /share route.
+ *
+ * URL format: https://poultrybot.netlify.app/share?sid=<dpaste-id>
+ *
+ * SharedView fetches the raw content from dpaste using the sid,
+ * so the address bar stays clean regardless of message length.
+ *
+ * @param {string} messageContent
+ * @returns {Promise<string>} The short share URL
+ */
+export async function buildShareUrl(messageContent) {
+  const form = new FormData();
+  form.append("content", messageContent);
+  form.append("syntax",  "text");
+  form.append("expiry_days", "30");
 
-    try {
-      const successful = document.execCommand("copy");
-      document.body.removeChild(textarea);
-      successful ? resolve() : reject(new Error("Copy failed"));
-    } catch (error) {
-      document.body.removeChild(textarea);
-      reject(error);
-    }
+  const res = await fetch("https://dpaste.com/api/v2/", {
+    method: "POST",
+    body:   form,
   });
-}
 
-function storageKeyForShare(sid) {
-  return `poultry-share-${sid}`;
-}
+  if (!res.ok) throw new Error("Could not create share link. Please try again.");
 
-function saveShareMessage(sid, messageContent) {
-  if (typeof localStorage === "undefined") return;
-  try {
-    localStorage.setItem(storageKeyForShare(sid), JSON.stringify({ messageContent, createdAt: Date.now() }));
-  } catch {
-    // ignore storage failures
-  }
-}
+  // dpaste returns a URL like https://dpaste.com/XXXXXXXX
+  const pasteUrl = (await res.text()).trim();
+  // Extract just the ID part, e.g. "XXXXXXXX"
+  const sid = pasteUrl.replace(/https?:\/\/dpaste\.com\//, "").replace(/\/$/, "");
 
-export function readShareMessage(sid) {
-  if (typeof localStorage === "undefined") return null;
-  try {
-    const raw = localStorage.getItem(storageKeyForShare(sid));
-    return raw ? JSON.parse(raw).messageContent : null;
-  } catch {
-    return null;
-  }
-}
-
-export function buildShareUrl(messageContent, existingSid = null) {
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://poultry-expert.app";
-  const sid = existingSid || generateId("share");
-  saveShareMessage(sid, messageContent);
-  const encodedMessage = encodeURIComponent(messageContent);
-  return `${origin}/share?msg=${encodedMessage}&sid=${sid}&utm_source=chat`;
+  const base = window.location.origin;
+  // Use /share?sid=... so it renders as a proper shared view page
+  return `${base}/share?sid=${sid}`;
 }

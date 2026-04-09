@@ -26,6 +26,25 @@ export default function SharedView({ message, sid }) {
 
   const visibleMessage = message || cacheMessage;
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const url = new URL(window.location.href);
+    const hasMsg = url.searchParams.has("msg");
+    const hasSid = url.searchParams.has("sid");
+    const shouldUpdate = Boolean(visibleMessage) && (!hasMsg || (sid && !hasSid));
+
+    if (shouldUpdate) {
+      url.searchParams.set("msg", visibleMessage);
+      if (sid) {
+        url.searchParams.set("sid", sid);
+      }
+      setShareUrl(url.toString());
+    } else {
+      setShareUrl(window.location.href);
+    }
+  }, [visibleMessage, sid]);
+
   const truncateMiddle = (text, maxLength = 76) => {
     if (!text || text.length <= maxLength) return text;
     const slice = Math.floor((maxLength - 3) / 2);

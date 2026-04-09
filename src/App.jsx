@@ -84,7 +84,17 @@ export default function App() {
   };
 
   if (isSharedRoute) {
-    return <SharedView message={sharedMessage} sid={sharedSid} />;
+    return (
+      <div style={{
+        minHeight: "100vh",
+        width: "100%",
+        background: "var(--bg)",
+        overflowY: "auto",
+        position: "relative",
+      }}>
+        <SharedView message={sharedMessage} sid={sharedSid} />
+      </div>
+    );
   }
 
   if (!user) return <AuthPage />;

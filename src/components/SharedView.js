@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { copyToClipboard, readShareMessage } from "../utils/helpers";
-import { CopyIcon } from "./UI/Icons";
 
 export default function SharedView({ message, sid }) {
   const [shareUrl, setShareUrl] = useState("");

@@ -132,14 +132,26 @@ export default function ShareModal({ message, onClose, showToast }) {
             padding: "12px 14px",
             border: "1px solid var(--border)",
             marginBottom: 18,
-            wordBreak: "break-all",
             color: "var(--accent)",
             fontFamily: "monospace",
             fontSize: 12,
             lineHeight: 1.5,
           }}
         >
-          {shareUrl}
+          <a
+            href={shareUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "inline-block",
+              width: "100%",
+              color: "var(--accent)",
+              textDecoration: "none",
+              wordBreak: "break-word",
+            }}
+          >
+            {shareUrl}
+          </a>
         </div>
 
         {/* Action buttons */}

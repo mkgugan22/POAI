@@ -1,13 +1,37 @@
 import React, { useEffect, useState } from "react";
-import { copyToClipboard } from "../utils/helpers";
+import { copyToClipboard, readShareMessage } from "../utils/helpers";
 import { CopyIcon } from "./UI/Icons";
 
 export default function SharedView({ message, sid }) {
   const [shareUrl, setShareUrl] = useState("");
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedText, setCopiedText] = useState(false);
-  const hasMessage = Boolean(message);
+  const [cacheMessage, setCacheMessage] = useState(null);
+  const hasMessage = Boolean(message || cacheMessage);
   const shareActive = Boolean(shareUrl);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setShareUrl(window.location.href);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!message && sid) {
+      const saved = readShareMessage(sid);
+      if (saved) {
+        setCacheMessage(saved);
+      }
+    }
+  }, [message, sid]);
+
+  const visibleMessage = message || cacheMessage;
+
+  const truncateMiddle = (text, maxLength = 76) => {
+    if (!text || text.length <= maxLength) return text;
+    const slice = Math.floor((maxLength - 3) / 2);
+    return `${text.slice(0, slice)}...${text.slice(text.length - slice)}`;
+  };
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -23,8 +47,8 @@ export default function SharedView({ message, sid }) {
   };
 
   const handleCopyText = async () => {
-    if (!message) return;
-    await copyToClipboard(message);
+    if (!visibleMessage) return;
+    await copyToClipboard(visibleMessage);
     setCopiedText(true);
     setTimeout(() => setCopiedText(false), 2200);
   };
@@ -117,12 +141,13 @@ export default function SharedView({ message, sid }) {
                     href={shareUrl}
                     target="_blank"
                     rel="noopener noreferrer"
+                    title={shareUrl}
                     style={{
                       color: "var(--accent)",
                       textDecoration: "none",
                     }}
                   >
-                    {shareUrl}
+                    {truncateMiddle(shareUrl)}
                   </a>
                 ) : (
                   "Loading URL..."
@@ -171,7 +196,7 @@ export default function SharedView({ message, sid }) {
               color: "var(--text)",
             }}>
               {hasMessage ? (
-                message
+                visibleMessage
               ) : sid ? (
                 "This shared link is valid. Open the app to view the full response."
               ) : (

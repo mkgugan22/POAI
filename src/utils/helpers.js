@@ -64,11 +64,33 @@ export function copyToClipboard(text) {
   });
 }
 
-/**
- * Build a shareable URL for a chat message snippet.
- */
+function storageKeyForShare(sid) {
+  return `poultry-share-${sid}`;
+}
+
+function saveShareMessage(sid, messageContent) {
+  if (typeof localStorage === "undefined") return;
+  try {
+    localStorage.setItem(storageKeyForShare(sid), JSON.stringify({ messageContent, createdAt: Date.now() }));
+  } catch {
+    // ignore storage failures
+  }
+}
+
+export function readShareMessage(sid) {
+  if (typeof localStorage === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(storageKeyForShare(sid));
+    return raw ? JSON.parse(raw).messageContent : null;
+  } catch {
+    return null;
+  }
+}
+
 export function buildShareUrl(messageContent) {
-  const encodedMessage = encodeURIComponent(messageContent);
+  const id = `s_${Math.random().toString(36).slice(2, 9)}`;
+  saveShareMessage(id, messageContent);
+
   const origin = typeof window !== "undefined" ? window.location.origin : "https://poultry-expert.app";
-  return `${origin}/share?msg=${encodedMessage}&utm_source=chat`;
+  return `${origin}/share?sid=${id}&utm_source=chat`;
 }
